@@ -13,15 +13,16 @@ interface EmailInputBoxProps {
   domainList: string[];
   buttonText?: string;
   buttonVariant?: string;
-  onButtonClick: () => void;
+  onButtonClick?: () => void;
   disabled?: boolean;
   handleDropdownToggle: () => void;
   handleDomainSelect: (d: string) => void;
   handleLocalChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  isCustomDomain: boolean;
-  customDomain: string;
-  setCustomDomain: (val: string) => void;
-  setIsCustomDomain: (val: boolean) => void;
+  isCustomDomain?: boolean;
+  customDomain?: string;
+  setCustomDomain?: (val: string) => void;
+  setIsCustomDomain?: (val: boolean) => void;
+  showButton?: boolean;
 }
 
 const EmailInputBox: React.FC<EmailInputBoxProps> = ({
@@ -35,7 +36,6 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
   error,
   domainList,
   buttonText = "확인",
-  buttonVariant = "orange",
   onButtonClick,
   disabled = false,
   handleDropdownToggle,
@@ -45,6 +45,7 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
   customDomain,
   setCustomDomain,
   setIsCustomDomain,
+  showButton = true,
 }) => {
   const { isMobile, isTablet, isSmallMobile } = useIsMobile();
   const buttonSize = isSmallMobile ? "full" : isTablet ? "fit" : "medium";
@@ -78,7 +79,7 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
             <input 
               type="text"
               value={customDomain}
-              onChange={(e) => setCustomDomain(e.target.value)}
+              onChange={(e) => setCustomDomain?.(e.target.value)}
               placeholder="도메인 입력"
               className="h-[48px] w-full px-4 border border-gray-300 rounded-lg text-base bg-white 
                   placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 transition text-black"
@@ -86,10 +87,10 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
             <button
               type="button"
               onClick={() => {
-                setCustomDomain("");
+                setCustomDomain?.("");
                 setDomain("선택");
                 setDropdownOpen(true);
-                setIsCustomDomain(false);
+                setIsCustomDomain?.(false);
               }}
               className="absolute right-2 text-gray-600 hover:text-black material-symbols-outlined cursor-pointer"
             >
@@ -128,21 +129,6 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
               )}
             </>
         )}
-        {/* <button
-          type="button"
-          disabled={disabled}
-          onClick={handleDropdownToggle}
-          className={`
-            h-[48px] w-full px-4 flex items-center justify-between border border-gray-300 rounded-lg bg-white text-base
-            ${dropdownOpen ? "ring-2 ring-gray-200" : ""}
-            ${domain && domain !== "선택" ? "text-black" : "text-gray-400"}
-            transition
-          `}
-          tabIndex={0}
-        >
-          <span className="truncate">{isCustomDomain ? '직접입력' : domain || '도메인 선택'}</span>
-          <span className="material-symbols-outlined cursor-pointer text-black">arrow_drop_down</span>
-        </button> */}
         {dropdownOpen && (
           <ul className="absolute left-0 top-[110%] z-10 w-full bg-white border border-gray-300 rounded-lg shadow-md">
             {domainList.map((d) => (
@@ -156,21 +142,20 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
             ))}
           </ul>
         )}
-        {/* {isCustomDomain && (
-          
-        )} */}
       </div>
       <div className={`h-full ${isSmallMobile ? "w-full" : "w-fit"} cursor-pointer flex flex-row`}>
-        <button
-          type="button"
-          onClick={onButtonClick}
-          className={`min-w-[80px] sm:w-full h-[48px] px-4 py-3 rounded-lg font-semibold 
-          transition-colors duration-300 cursor-pointer
-          ${isDisabled ? "bg-gray-300 text-gray-500" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
-          disabled={isDisabled}
-        >
-          {buttonText}
-        </button>
+        {showButton && (
+          <button
+            type="button"
+            onClick={onButtonClick}
+            className={`min-w-[80px] sm:w-full h-[48px] px-4 py-3 rounded-lg font-semibold 
+              transition-colors duration-300 cursor-pointer
+              ${isDisabled ? "bg-gray-300 text-gray-500" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
+            disabled={isDisabled}
+          >
+            {buttonText}
+          </button>
+        )}
       </div>
     </div>
     {error && (
