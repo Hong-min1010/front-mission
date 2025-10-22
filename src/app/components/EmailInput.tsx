@@ -21,6 +21,7 @@ interface EmailInputBoxProps {
   isCustomDomain: boolean;
   customDomain: string;
   setCustomDomain: (val: string) => void;
+  setIsCustomDomain: (val: boolean) => void;
 }
 
 const EmailInputBox: React.FC<EmailInputBoxProps> = ({
@@ -43,14 +44,15 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
   isCustomDomain,
   customDomain,
   setCustomDomain,
+  setIsCustomDomain,
 }) => {
   const { isMobile, isTablet, isSmallMobile } = useIsMobile();
   const buttonSize = isSmallMobile ? "full" : isTablet ? "fit" : "medium";
   const isDisabled = disabled || !local || (isCustomDomain ? !customDomain : !domain || domain === "선택");
 
   const getErrorColor = () => {
-    if (error === "사용 가능한 이메일입니다.") return "text-black";
-    if (error) return "text-red-500";
+    if (error === "사용 가능한 이메일입니다.") return "text-green-500 font-bold";
+    if (error) return "text-red-500 font-bold";
     return "";
   };
 
@@ -72,14 +74,28 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
       <span className="text-xl font-bold select-none bg-transparent text-black">@</span>
       <div className="relative flex items-center w-full min-w-[160px] text-black">
         {isCustomDomain ? (
-          <input 
-            type="text"
-            value={customDomain}
-            onChange={(e) => setCustomDomain(e.target.value)}
-            placeholder="도메인을 입력하세요"
-            className="h-[48px] w-full px-4 border border-gray-300 rounded-lg text-base bg-white 
-                placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 transition text-black"
-          />
+          <div className="relative flex items-center w-full">
+            <input 
+              type="text"
+              value={customDomain}
+              onChange={(e) => setCustomDomain(e.target.value)}
+              placeholder="도메인 입력"
+              className="h-[48px] w-full px-4 border border-gray-300 rounded-lg text-base bg-white 
+                  placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 transition text-black"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                setCustomDomain("");
+                setDomain("선택");
+                setDropdownOpen(true);
+                setIsCustomDomain(false);
+              }}
+              className="absolute right-2 text-gray-600 hover:text-black material-symbols-outlined cursor-pointer"
+            >
+              arrow_drop_down
+            </button>
+          </div>
         ) : (
           <>
               <button
