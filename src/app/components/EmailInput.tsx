@@ -47,8 +47,8 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
   setIsCustomDomain,
   showButton = true,
 }) => {
-  const { isMobile, isTablet, isSmallMobile } = useIsMobile();
-  const buttonSize = isSmallMobile ? "full" : isTablet ? "fit" : "medium";
+  const { isXs, isSm, isMd, isLg, isMobile, isTablet } = useIsMobile();
+  const buttonSize = isXs ? "full" : isTablet ? "fit" : "medium";
   const isDisabled = disabled || !local || (isCustomDomain ? !customDomain : !domain || domain === "선택");
 
   const getErrorColor = () => {
@@ -67,7 +67,7 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
         onChange={handleLocalChange}
         placeholder="이메일 입력"
         disabled={disabled}
-        className={`h-[48px] w-full px-4 border border-gray-300 rounded-lg text-base bg-white 
+        className={`h-[48px] w-full px-4 border border-gray-700 rounded-lg text-base bg-white 
           placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 transition text-black
           ${error && error !== "사용 가능한 이메일입니다." ? "border-red-500" : ""}`}
         autoComplete="off"
@@ -81,7 +81,7 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
               value={customDomain}
               onChange={(e) => setCustomDomain?.(e.target.value)}
               placeholder="도메인 입력"
-              className="h-[48px] w-full px-4 border border-gray-300 rounded-lg text-base bg-white 
+              className="h-[48px] w-full px-4 border border-gray-700 rounded-lg text-base bg-white 
                   placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 transition text-black"
             />
             <button
@@ -103,8 +103,8 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
                 type="button"
                 disabled={disabled}
                 onClick={handleDropdownToggle}
-                className={`h-[48px] w-full px-4 flex items-center justify-between border border-gray-300 rounded-lg bg-white text-base
-                  ${dropdownOpen ? "ring-2 ring-orange-200" : ""}
+                className={`h-[48px] w-full px-4 flex items-center justify-between border border-gray-700 rounded-lg bg-white text-base
+                  ${dropdownOpen ? "ring-2 ring-gray-200" : ""}
                   ${domain && domain !== "선택" ? "text-black" : "text-gray-400"}
                   transition`}
               >
@@ -115,11 +115,11 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
               </button>
 
               {dropdownOpen && (
-                <ul className="absolute left-0 top-[110%] z-10 w-full bg-white border border-gray-300 rounded-lg shadow-md">
+                <ul className="absolute left-0 top-[110%] z-10 w-full bg-white border border-gray-700 rounded-lg shadow-md">
                   {domainList.map((d) => (
                     <li
                       key={d}
-                      className="px-4 py-2 cursor-pointer hover:bg-orange-100"
+                      className="px-4 py-2 cursor-pointer hover:bg-gray-100"
                       onClick={() => handleDomainSelect(d)}
                     >
                       {d}
@@ -134,7 +134,7 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
             {domainList.map((d) => (
               <li
                 key={d}
-                className="px-4 py-2 cursor-pointer hover:bg-orange-100"
+                className="px-4 py-2 cursor-pointer hover:bg-gray-100"
                 onClick={() => handleDomainSelect(d)}
               >
                 {d}
@@ -143,7 +143,7 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
           </ul>
         )}
       </div>
-      <div className={`h-full ${isSmallMobile ? "w-full" : "w-fit"} cursor-pointer flex flex-row`}>
+      <div className={`h-full ${isXs ? "w-full" : "w-fit"} cursor-pointer flex flex-row`}>
         {showButton && (
           <button
             type="button"

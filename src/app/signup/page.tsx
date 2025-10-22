@@ -22,7 +22,7 @@ export default function Signup() {
   const [isPasswordConfirmed, setIsPasswordConfirmed] = useState(false);
   const [confirmTouched, setConfirmTouched] = useState(false);
   const [touched, setTouched] = useState(false);
-  const { isTablet, isMobile, isSmallMobile } = useIsMobile();
+  const { isXs, isSm, isMd, isLg, isMobile, isTablet } = useIsMobile();
   const [signupMessage, setSignupMessage] = useState("");
   const [isCustomDomain, setIsCustomDomain] = useState(false);
   const [customDomain, setCustomDomain] = useState("");
