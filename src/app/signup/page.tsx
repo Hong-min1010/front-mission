@@ -22,9 +22,12 @@ export default function Signup() {
   const [touched, setTouched] = useState(false);
   const { isTablet, isMobile, isSmallMobile } = useIsMobile();
   const [signupMessage, setSignupMessage] = useState("");
+  const [isCustomDomain, setIsCustomDomain] = useState(false);
+  const [customDomain, setCustomDomain] = useState("");
+  
 
   const emailRegex = /^[a-zA-Z0-9]+@[^\s@]+\.[^\s@]+$/;
-  const domains = ['gmail.com', 'naver.com', 'hanmail.com', 'kakao.com'];
+  const domains = ['gmail.com', 'naver.com', 'hanmail.com', 'kakao.com', 'bigs.or.kr', '직접입력'];
 
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!%*#?&])[A-Za-z\d!%*#?&]{8,}$/;
 
@@ -36,6 +39,14 @@ export default function Signup() {
   const handleDomainSelect = (selectedDomain: string) => {
     setDomain(selectedDomain);
     setDropdownOpen(false);
+
+    if(selectedDomain === '직접입력') {
+      setIsCustomDomain(true);
+      setDomain('');
+    } else {
+      setIsCustomDomain(false)
+      setDomain(selectedDomain)
+    }
   };
 
   const handleLocalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,7 +54,7 @@ export default function Signup() {
   };
 
   const handleButtonClick = () => {
-    const email = `${local}@${domain}`;
+    const email = `${local}@${isCustomDomain ? customDomain : domain}`;
     if (!emailRegex.test(email)) {
       setEmailError("올바른 이메일 형식으로 입력해주세요.");
     } else {
@@ -138,6 +149,9 @@ export default function Signup() {
               handleDropdownToggle={handleDropdownToggle}
               handleDomainSelect={handleDomainSelect}
               handleLocalChange={handleLocalChange}
+              isCustomDomain={isCustomDomain}
+              customDomain={customDomain}
+              setCustomDomain={setCustomDomain}
             />
             <div className="w-full">
               <div className="text-black font-bold text-lg">Name</div>

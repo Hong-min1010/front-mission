@@ -18,6 +18,9 @@ interface EmailInputBoxProps {
   handleDropdownToggle: () => void;
   handleDomainSelect: (d: string) => void;
   handleLocalChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isCustomDomain: boolean;
+  customDomain: string;
+  setCustomDomain: (val: string) => void;
 }
 
 const EmailInputBox: React.FC<EmailInputBoxProps> = ({
@@ -37,10 +40,13 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
   handleDropdownToggle,
   handleDomainSelect,
   handleLocalChange,
+  isCustomDomain,
+  customDomain,
+  setCustomDomain,
 }) => {
   const { isMobile, isTablet, isSmallMobile } = useIsMobile();
   const buttonSize = isSmallMobile ? "full" : isTablet ? "fit" : "medium";
-  const isDisabled = disabled || !local || !domain || domain === "선택";
+  const isDisabled = disabled || !local || (isCustomDomain ? !customDomain : !domain || domain === "선택");
 
   const getErrorColor = () => {
     if (error === "사용 가능한 이메일입니다.") return "text-black";
@@ -59,27 +65,68 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
         placeholder="이메일 입력"
         disabled={disabled}
         className={`h-[48px] w-full px-4 border border-gray-300 rounded-lg text-base bg-white 
-          placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-200 transition text-black
+          placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 transition text-black
           ${error && error !== "사용 가능한 이메일입니다." ? "border-red-500" : ""}`}
         autoComplete="off"
       />
       <span className="text-xl font-bold select-none bg-transparent text-black">@</span>
       <div className="relative flex items-center w-full min-w-[160px] text-black">
-        <button
+        {isCustomDomain ? (
+          <input 
+            type="text"
+            value={customDomain}
+            onChange={(e) => setCustomDomain(e.target.value)}
+            placeholder="도메인을 입력하세요"
+            className="h-[48px] w-full px-4 border border-gray-300 rounded-lg text-base bg-white 
+                placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 transition text-black"
+          />
+        ) : (
+          <>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={handleDropdownToggle}
+                className={`h-[48px] w-full px-4 flex items-center justify-between border border-gray-300 rounded-lg bg-white text-base
+                  ${dropdownOpen ? "ring-2 ring-orange-200" : ""}
+                  ${domain && domain !== "선택" ? "text-black" : "text-gray-400"}
+                  transition`}
+              >
+                <span className="truncate">{domain || "도메인 선택"}</span>
+                <span className="material-symbols-outlined cursor-pointer text-black">
+                  arrow_drop_down
+                </span>
+              </button>
+
+              {dropdownOpen && (
+                <ul className="absolute left-0 top-[110%] z-10 w-full bg-white border border-gray-300 rounded-lg shadow-md">
+                  {domainList.map((d) => (
+                    <li
+                      key={d}
+                      className="px-4 py-2 cursor-pointer hover:bg-orange-100"
+                      onClick={() => handleDomainSelect(d)}
+                    >
+                      {d}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+        )}
+        {/* <button
           type="button"
           disabled={disabled}
           onClick={handleDropdownToggle}
           className={`
             h-[48px] w-full px-4 flex items-center justify-between border border-gray-300 rounded-lg bg-white text-base
-            ${dropdownOpen ? "ring-2 ring-orange-200" : ""}
+            ${dropdownOpen ? "ring-2 ring-gray-200" : ""}
             ${domain && domain !== "선택" ? "text-black" : "text-gray-400"}
             transition
           `}
           tabIndex={0}
         >
-          <span className="truncate">{domain}</span>
+          <span className="truncate">{isCustomDomain ? '직접입력' : domain || '도메인 선택'}</span>
           <span className="material-symbols-outlined cursor-pointer text-black">arrow_drop_down</span>
-        </button>
+        </button> */}
         {dropdownOpen && (
           <ul className="absolute left-0 top-[110%] z-10 w-full bg-white border border-gray-300 rounded-lg shadow-md">
             {domainList.map((d) => (
@@ -93,6 +140,9 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
             ))}
           </ul>
         )}
+        {/* {isCustomDomain && (
+          
+        )} */}
       </div>
       <div className={`h-full ${isSmallMobile ? "w-full" : "w-fit"} cursor-pointer flex flex-row`}>
         <button
