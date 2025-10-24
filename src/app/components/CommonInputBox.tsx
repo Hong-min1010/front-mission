@@ -1,7 +1,8 @@
 import React from "react";
 
 interface InputBoxProps {
-  className?: string;
+  containerClassName?: string;
+  inputClassName?: string;
   label?: string;
   type?: string;
   value: string;
@@ -16,7 +17,8 @@ interface InputBoxProps {
 }
 
 export default function CommonInputBox({
-  className = "",
+  containerClassName = "",
+  inputClassName = "",
   label,
   type = "text",
   value,
@@ -27,12 +29,13 @@ export default function CommonInputBox({
   errorMessage = "올바른 형식이 아닙니다.",
   touched = false,
   icon,
+  onKeyDown,
 }: InputBoxProps) {
   const invalid = regex ? touched && !regex.test(value) : false;
 
   return (
-    <div className={`flex flex-col text-gray-300 bg-white w-full rounded-lg ${className}`}>
-      <label className="font-semibold text-lg text-black">{label}</label>
+    <div className={`flex flex-col text-gray-300 bg-white w-full rounded-lg ${containerClassName}`}>
+      {label && <label className="font-semibold text-lg text-black">{label}</label>}
       <div className="relative w-full">
         <input
           type={type}
@@ -40,9 +43,11 @@ export default function CommonInputBox({
           placeholder={placeholder}
           onChange={onChange}
           onBlur={onBlur}
-          className={`border rounded-lg w-full px-4 h-[48px] text-base outline-none 
+          onKeyDown={onKeyDown}
+          className={`border rounded-lg w-full px-4 h-[48px] outline-none pr-12 
             ${invalid ? "border-red-500" : "border-gray-700"}
-            ${value.length > 0 ? "text-black" : "text-gray-700"} placeholder:text-gray-700`}
+            ${value.length > 0 ? "text-black" : "text-gray-700"} placeholder:text-gray-700 ${inputClassName}`}
+            
           autoComplete="off"
         />
         {icon && (

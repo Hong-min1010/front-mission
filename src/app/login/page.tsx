@@ -6,13 +6,16 @@ import CommonInputBox from "../components/CommonInputBox";
 import useIsMobile from "../hooks/useIsMobile";
 import instance from "../axiosInstance";
 import { AxiosError } from "axios";
+import Link from "next/link";
+import decodeJWT from "../utils/decodeJWT";
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onLoginSuccess?: () => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose}) => {
+const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}) => {
   const [local, setLocal] = useState("");
   const [domain, setDomain] = useState("선택");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -20,7 +23,7 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose}) => {
   const [pwError, setPwError] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState(false);
-  const { isXs, isSm, isMd, isLg, isMobile, isTablet } = useIsMobile();
+  // const { isXs, isSm, isMd, isLg, isMobile, isTablet } = useIsMobile();
   const [rememberLogin, setRememberLogin] = useState(false);
   if(!isOpen) return null;
   
@@ -55,10 +58,27 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose}) => {
         username: email,
         password: password
       })
+
+      const accessToken = res.data.accessToken;
+      const refreshToken = res.data.refreshToken;
+
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken)
+
+      const userInfo = decodeJWT(accessToken);
+      console.log("Decoded", userInfo);
+
+      localStorage.setItem("user", JSON.stringify(userInfo));
+
+      if(onLoginSuccess) onLoginSuccess();
+      setPwError('');
+      onClose();
+      console.log("Login 성공")
     } catch(e) {
       if (e instanceof AxiosError) {
         console.error(e.response?.data.message);
       }
+      return;
     }
   }
 
@@ -123,6 +143,11 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose}) => {
                 >
                   Login
                 </button>
+                {pwError && (
+                  <div className="text-red-500 text-sm mt-2 w-full text-center">
+                    {pwError}
+                  </div>
+                )}
               </div>
             </div>
           </main>

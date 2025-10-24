@@ -7,6 +7,7 @@ import CommonInputBox from "../components/CommonInputBox";
 import useIsMobile from "../hooks/useIsMobile";
 import instance from "../axiosInstance";
 import { AxiosError } from "axios";
+import Link from "next/link";
 
 export default function Signup() {
   const [local, setLocal] = useState("");
@@ -92,11 +93,6 @@ export default function Signup() {
     }
   };
 
-  // const isConfirmEnabled =
-  //   emailRegex.test(`${local}@${isCustomDomain ? customDomain : domain}`) &&
-  //   passwordRegex.test(password) &&
-  //   password === confirmPw;
-    
   const isSignupEnabled =
     isEmailVerified &&
     isPasswordConfirmed &&
@@ -226,7 +222,7 @@ export default function Signup() {
             </div>
           </div>
           {/* Btn */}
-          <div className="flex flex-row justify-between mt-10 gap-20">
+          <div className="flex flex-row justify-between mt-10 gap-20 w-full">
             <button
             type="button"
             className={`flex items-center justify-center w-full rounded-lg px-2 py-2 text-black font-bold text-lg ${isSignupEnabled ? 'bg-green-300 border-2 border-green-500 cursor-pointer' : 'bg-gray-300 cursor-not-allowed border-2 border-gray-500'}`}
@@ -235,8 +231,12 @@ export default function Signup() {
             >
               회원가입
             </button>
-            <div className="flex items-center justify-center w-full bg-red-300 border-2 border-red-500 rounded-lg px-2 py-2 text-black font-bold text-lg cursor-pointer">
-              홈으로
+            <div className="w-full">
+              <Link href='/'>
+                <button className="flex flex-row items-center justify-center w-full h-full bg-red-300 border-2 border-red-500 rounded-lg px-2 py-2 text-black font-bold text-lg cursor-pointer">
+                  홈으로
+                </button>
+              </Link>
             </div>
           </div>
           {signupMessage && (
