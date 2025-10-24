@@ -44,6 +44,7 @@ export default function BoardDetailPage() {
   const [detail, setDetail] = useState<BoardDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const isResponsive = isSm;
 
@@ -92,6 +93,24 @@ export default function BoardDetailPage() {
       : `${API_BASE}${detail.imageUrl}`;
   }, [detail?.imageUrl]);
 
+  const onEdit = () => {
+    router.push(`/edit?id=${params.id}`);
+  };
+
+  const onDelete = async () => {
+    if (!confirm('정말 삭제하시겠습니까 ?')) return;
+    setDeleting(true);
+    try {
+      await instance.delete(`/boards/${params.id}`);
+      alert('삭제되었습니다.');
+      router.push('/');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDeleting(true);
+    }
+  }
+
   return (
     <div className="flex flex-row h-screen bg-gray-700 text-white">
       {!isResponsive && (
@@ -115,6 +134,22 @@ export default function BoardDetailPage() {
               <span className="material-symbols-outlined">keyboard_backspace</span>
               뒤로가기
             </button>
+            <div className='flex gap-2'>
+              <button
+                onClick={onEdit}
+                disabled={loading}
+                className={`px-4 py-2 rounded-lg ${loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} `}
+              >
+                수정
+              </button>
+              <button
+                onClick={onDelete}
+                disabled={loading || deleting}
+                className={`px-4 py-2 rounded-lg ${loading || deleting ? 'bg-gray-500 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} `}
+              >
+                {deleting ? '삭제 중' : '삭제'}
+              </button>
+            </div>
           </div>
 
           {loading && <div className="w-full bg-gray-600 animate-pulse rounded-xl h-40" />}

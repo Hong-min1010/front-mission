@@ -1,35 +1,27 @@
 'use client'
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import SearchBar from "./components/SearchBar";
 import useIsMobile from "./hooks/useIsMobile";
 import instance from "./axiosInstance";
 import decodeJWT from "./utils/decodeJWT";
 import Sidebar from "./components/Sidebar";
 import Link from "next/link";
+import useCategories from "./hooks/useCategories";
 
-const CATEGORY_LABEL = {
-  NOTICE: "공지",
-  FREE: "자유",
-  QNA: "Q&A",
-  ETC: "기타",
+const CATEGORY_COLOR: Record<string, string> = {
+  NOTICE: 'bg-[#ead0d1]',
+  FREE:   'bg-[#d5ebd6]',
+  QNA:    'bg-[#f8f5c6]',
+  ETC:    'bg-[#e3f6f4]',
 };
-
-const CATEGORY_COLOR = {
-  NOTICE: "bg-[#ead0d1]",
-  FREE: "bg-[#d5ebd6]",
-  QNA: "bg-[#f8f5c6]",
-  ETC: "bg-[#e3f6f4]",
-};
+const colorOf = (key: string) => CATEGORY_COLOR[key] ?? 'bg-gray-200';
 
 interface Post {
   id: number;
   title: string;
-  category: keyof typeof CATEGORY_LABEL;
   createdAt: string;
-  author?: { name?: string, email?: string } | null;
-  authorName?: string;
-  authorEmail?: string;
+  category: string;
 }
 
 export default function Home() {
@@ -40,6 +32,7 @@ export default function Home() {
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [user, setUser] = useState<{ email?: string; name?: string }>({});
+  const { labels, keys, loading: catLoading, error: catError } = useCategories();
 
   const isResponsive = isSm;
 
@@ -106,10 +99,21 @@ export default function Home() {
           </div>
         )}
         <div className="flex flex-row w-full justify-end gap-3 max-w-6xl mx-auto my-6">
-          <div className="cursor-pointer px-2 py-1 rounded-lg border border-white bg-white text-gray-700">공지</div>
-          <div className="cursor-pointer px-2 py-1 rounded-lg border border-white bg-white text-gray-700">자유</div>
-          <div className="cursor-pointer px-2 py-1 rounded-lg border border-white bg-white text-gray-700">Q&A</div>
-          <div className="cursor-pointer px-2 py-1 rounded-lg border border-white bg-white text-gray-700">기타</div>
+          {catLoading && (
+            <div className="text-sm opacity-80">카테고리 불러오는 중…</div>
+          )}
+          {catError && (
+            <div className="text-sm text-red-300">카테고리 로딩 실패</div>
+          )}
+          {!catLoading && !catError && keys.map((k) => (
+            <div
+              key={k}
+              className="cursor-pointer px-2 py-1 rounded-lg border border-white bg-white text-gray-700"
+              title={k}
+            >
+              {labels[k]}
+            </div>
+          ))}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
           {(posts || []).map((post: Post) => (
@@ -130,11 +134,12 @@ export default function Home() {
                     hour: "2-digit",
                     minute: "2-digit",
                     hour12: false,
-                  })}</div>
+                  })}
+                  </div>
                 </div>
-                <div className={`flex items-stretch min-w-[80px] h-full font-bold text-xl justify-center text-black ${CATEGORY_COLOR[post.category as keyof typeof CATEGORY_COLOR]}`}>
-                  <span className="flex items-center w-full justify-center h-full">
-                    {CATEGORY_LABEL[post.category as keyof typeof CATEGORY_LABEL]}
+                <div className={`flex items-stretch min-w-[80px] h-full font-bold text-xl justify-center text-black ${colorOf(post.category)}`}>
+                  <span className="flex items-center w-full justify-center h-full px-2 text-center">
+                    {labels[post.category] ?? post.category}
                   </span>
                 </div>
               </div>
