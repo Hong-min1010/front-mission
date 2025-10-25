@@ -6,22 +6,8 @@ import useIsMobile from "../hooks/useIsMobile";
 import decodeJWT from "../utils/decodeJWT";
 import Sidebar from "../components/Sidebar";
 import CommonInputBox from "../components/CommonInputBox";
+import useCategories from "../hooks/useCategories";
 
-const CATEGORY_LABEL = {
-  NOTICE: "공지",
-  FREE: "자유",
-  QNA: "Q&A",
-  ETC: "기타",
-} as const;
-
-const CATEGORY_COLOR = {
-  NOTICE: "bg-[#ead0d1]",
-  FREE: "bg-[#d5ebd6]",
-  QNA: "bg-[#f8f5c6]",
-  ETC: "bg-[#e3f6f4]",
-} as const;
-
-type CategoryKey = keyof typeof CATEGORY_LABEL;
 
 export default function Write() {
   const [touched, setTouched] = useState(false);
@@ -30,12 +16,12 @@ export default function Write() {
   const [user, setUser] = useState<{ email?: string; name?: string }>({});
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [category, setCategory] = useState<CategoryKey | ''>('');
+  const [category, setCategory] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-
+  const { labels, keys, loading: catLoading, error: catError } = useCategories();
 
   const isResponsive = isSm;
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,7 +36,7 @@ export default function Write() {
           name: decoded.name || "User"
         })
       } else {
-        setUser({ name: "Guest", email: "로그인 필요" });
+        setUser({ name: "", email: "" });
       }
     }
     console.log('user', user)
@@ -92,7 +78,7 @@ export default function Write() {
       const requestPayload = {
         title: title.trim(),
         content: content.trim(),
-        category: category as CategoryKey,
+        category,
       };
 
       form.append(
@@ -143,34 +129,35 @@ export default function Write() {
             <div className="font-bold text-2xl">카테고리를 선택해주세요.</div>
             <div className="font-bold text-2xl text-red-400">(필수)</div>
           </div>
-
-          {(['NOTICE', 'FREE', 'QNA', 'ETC'] as CategoryKey[]).map((key) => {
-            const active = category === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setCategory(key)}
-                className={
-                  `cursor-pointer font-bold px-3 py-1 rounded-lg border border-black bg-white text-gray-700 text-2xl hover:bg-gray-200 transition ` +
-                  (active ? `${CATEGORY_COLOR[key]} ring-2 ring-black` : '')
-                }
-                aria-pressed={active}
-              >
-                {CATEGORY_LABEL[key]}
-              </button>
-            );
-          })}
+          {catLoading && <span className="text-sm opacity-80">카테고리 불러오는 중…</span>}
+            {catError && (
+              <span className="text-sm sm:text-base text-red-300">카테고리를 불러오지 못했습니다.</span>
+            )}
+            {!catLoading && !catError && keys.map((k) => {
+              const isActive = category === k;
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setCategory(k)}
+                  className={`cursor-pointer font-bold rounded-lg border transition
+                    px-3 py-1 text-base sm:text-xl
+                    ${isActive ? "bg-gray-700 text-white border-white" : "bg-white text-gray-700 hover:bg-gray-200 border-white"}`}
+                  aria-pressed={isActive}
+                >
+                  {labels[k]}
+                </button>
+              );
+            })}
         </div>
         <div className="flex flex-col w-full my-6 max-w-6xl">
           <div className="flex flex-row gap-4 items-center">
             <div className="font-bold text-2xl">첨부파일 등록</div>
             <div className="font-bold text-2xl text-red-400">(선택)</div>
-
             <button
               type="button"
               onClick={handlePickFile}
-              className="bg-white text-black rounded-lg h-[48px] px-5 text-xl font-bold hover:bg-gray-200"
+              className="bg-white text-black rounded-lg h-[48px] px-5 text-xl font-bold hover:bg-gray-200 cursor-pointer"
             >
               첨부파일 추가하기
             </button>
@@ -232,7 +219,7 @@ export default function Write() {
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className={`px-5 py-3 rounded-lg text-xl font-bold transition
+            className={`px-5 py-3 rounded-lg text-xl font-bold transition cursor-pointer
               ${canSubmit ? 'bg-blue-500 hover:bg-blue-600' : 'bg-gray-500 cursor-not-allowed'}`}
           >
             {submitting ? '작성 중…' : '작성완료'}

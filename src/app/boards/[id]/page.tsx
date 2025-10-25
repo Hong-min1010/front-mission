@@ -55,7 +55,7 @@ export default function BoardDetailPage() {
       setUser(
         decoded
           ? { email: decoded.username || '알 수 없음', name: decoded.name || 'User' }
-          : { name: 'Guest', email: '로그인 필요' }
+          : { name: '', email: '' }
       );
     }
   }, []);
@@ -138,14 +138,14 @@ export default function BoardDetailPage() {
               <button
                 onClick={onEdit}
                 disabled={loading}
-                className={`px-4 py-2 rounded-lg ${loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600'} `}
+                className={`px-4 py-2 rounded-lg ${loading ? 'bg-gray-500 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-600 cursor-pointer'} `}
               >
                 수정
               </button>
               <button
                 onClick={onDelete}
                 disabled={loading || deleting}
-                className={`px-4 py-2 rounded-lg ${loading || deleting ? 'bg-gray-500 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'} `}
+                className={`px-4 py-2 rounded-lg ${loading || deleting ? 'bg-gray-500 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600 cursor-pointer'} `}
               >
                 {deleting ? '삭제 중' : '삭제'}
               </button>

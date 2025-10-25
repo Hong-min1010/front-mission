@@ -10,6 +10,8 @@ interface SearchBarProps {
   errorMessage?: string;
   touched?: boolean;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 };
 
 const SearchBar: React.FC<SearchBarProps> = ({
@@ -19,10 +21,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = "게시글 제목을 검색해주세요.",
   errorMessage,
   touched,
-  onBlur
+  onBlur,
+  onFocus,
+  onKeyDown
 }) => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") onSubmit?.();
+    onKeyDown?.(e);
   }
 
   return (
@@ -33,6 +38,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
         onChange={onChange}
         touched={touched}
         onBlur={onBlur}
+        onFocus={onFocus}
         onKeyDown={handleKeyDown}
         errorMessage={errorMessage}
         placeholder={placeholder}

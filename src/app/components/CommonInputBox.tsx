@@ -14,6 +14,7 @@ interface InputBoxProps {
   touched?: boolean;
   icon?: React.ReactNode; 
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
 }
 
 export default function CommonInputBox({
@@ -30,6 +31,7 @@ export default function CommonInputBox({
   touched = false,
   icon,
   onKeyDown,
+  onFocus,
 }: InputBoxProps) {
   const invalid = regex ? touched && !regex.test(value) : false;
 
@@ -44,6 +46,7 @@ export default function CommonInputBox({
           onChange={onChange}
           onBlur={onBlur}
           onKeyDown={onKeyDown}
+          onFocus={onFocus}
           className={`border rounded-lg w-full px-4 h-[48px] outline-none pr-12 
             ${invalid ? "border-red-500" : "border-gray-700"}
             ${value.length > 0 ? "text-black" : "text-gray-700"} placeholder:text-gray-700 ${inputClassName}`}

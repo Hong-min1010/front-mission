@@ -2,44 +2,47 @@
 
 import { useEffect, useState } from 'react';
 import instance from '../axiosInstance';
-
-let cachedCategories: Record<string, string> | null = null;
+import { useAuth } from '../auth/AuthContext';
 
 export default function useCategories() {
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [keys, setKeys] = useState<string[]>([]);
+  const { tokenReady } = useAuth();
 
   useEffect(() => {
-    let mounted = true;
-
-    if (cachedCategories) {
-      setLabels(cachedCategories);
+    if(!tokenReady) {
+      setLabels({});
+      setKeys([]);
       setLoading(false);
-      return;
+      setError(null);
     }
 
+    let cancel = false;
+
     (async () => {
+      setLoading(true);
+      setError(null);
       try {
         const res = await instance.get('/boards/categories');
-        const data = (res?.data ?? {}) as Record<string, string>;
-        if (!mounted) return;
+        if (cancel) return;
+        const data = res.data || {};
         setLabels(data);
-        cachedCategories = data;
+        setLoading(false);
+        setKeys(Object.keys(data));
       } catch (e) {
-        setError('카테고리를 불러오지 못했습니다.');
+        if (cancel) return;
         setLabels({});
-      } finally {
-        if (mounted) setLoading(false);
+        setKeys([]);
+        setError('카테고리 로딩 실패');
+        setLoading(false);
       }
     })();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  const keys = Object.keys(labels);
-
+    return (() => {
+      cancel = true;
+    })
+  }, [tokenReady]) 
+  
   return { labels, keys, loading, error };
 }
