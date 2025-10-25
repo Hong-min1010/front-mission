@@ -8,6 +8,7 @@ import instance from "../axiosInstance";
 import { AxiosError } from "axios";
 import Link from "next/link";
 import decodeJWT from "../utils/decodeJWT";
+import { useAuth } from "../auth/AuthContext";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}) => {
+  const { login } = useAuth();
   const [local, setLocal] = useState("");
   const [domain, setDomain] = useState("선택");
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -62,16 +64,7 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}
       const accessToken = res.data.accessToken;
       const refreshToken = res.data.refreshToken;
 
-      localStorage.setItem("accessToken", accessToken);
-      localStorage.setItem("refreshToken", refreshToken)
-
-      const userInfo = decodeJWT(accessToken);
-      console.log("Decoded", userInfo);
-
-      localStorage.setItem("user", JSON.stringify(userInfo));
-
-      if(onLoginSuccess) onLoginSuccess();
-      setPwError('');
+      login(accessToken, refreshToken, rememberLogin);
       onClose();
       console.log("Login 성공")
     } catch(e) {
