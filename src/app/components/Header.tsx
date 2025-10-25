@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import useIsMobile from "../hooks/useIsMobile";
-import LoginModal from "../login/page";
+import LoginModal from "./LoginModal";
 import Link from "next/link";
 import { useAuth } from "../auth/AuthContext";
 

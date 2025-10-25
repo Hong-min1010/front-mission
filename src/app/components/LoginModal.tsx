@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from "react";
-import EmailInputBox from "../components/EmailInput";
-import CommonInputBox from "../components/CommonInputBox";
+import EmailInputBox from "./EmailInput";
+import CommonInputBox from "./CommonInputBox";
 import useIsMobile from "../hooks/useIsMobile";
 import instance from "../axiosInstance";
 import { AxiosError } from "axios";
