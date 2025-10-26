@@ -3,6 +3,7 @@ import Image from "next/image";
 import SearchBar from "./SearchBar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import useCategories from "../hooks/useCategories";
 
 type Post = { id: number; title: string; category: string; createdAt: string };
 
@@ -29,8 +30,8 @@ export default function Sidebar({
   const [focused, setFocused] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
   const wrapRef = useRef<HTMLDivElement>(null);
-
   const [q, setQ] = useState<string>(search ?? "");
+  const { labels, badgeStyle } = useCategories();
 
   useEffect(() => setQ(search ?? ""), [search]);
   useEffect(() => {
@@ -135,8 +136,11 @@ export default function Sidebar({
                       })}
                     </div>
                   </div>
-                  <span className="text-[11px] px-2 py-1 bg-gray-200 rounded whitespace-nowrap">
-                    {p.category}
+                  <span
+                    style={badgeStyle(p.category)}
+                    className="text-[11px] px-2 py-1 whitespace-nowrap transition group-hover:brightness-90"
+                  >
+                    {labels?.[p.category] ?? p.category}
                   </span>
                 </Link>
               ))}

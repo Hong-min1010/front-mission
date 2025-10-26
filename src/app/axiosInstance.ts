@@ -33,6 +33,11 @@ function applyAuthHeader(
 
 instance.interceptors.request.use(
   (config) => {
+    const url = (config.url || "").toLowerCase();
+    if (url.includes("/auth/refresh") || url.includes("/auth/login") || url.includes("/auth/signup")) {
+      return config;
+    }
+
     if (typeof window !== "undefined") {
       const accessToken = tokenStore.getAccess();
       if (accessToken) {

@@ -2,7 +2,6 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
 import decodeJWT from "@/app/utils/decodeJWT";
-import axios from "axios";
 import instance from "../axiosInstance";
 import { tokenStore } from "../utils/tokenStore";
 
@@ -20,6 +19,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [tokenReady, setTokenReady] = useState(false);
+  const [refreshRetry, setRefreshRetry] = useState(0);
+
 
   const refreshTimer = useRef<number | null>(null);
   const clearTimer = () => {
@@ -44,10 +45,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshNow = async () => {
-    const rt = tokenStore.getRefresh();
+    let rt = tokenStore.getRefresh();
+    if (!rt && typeof window !== 'undefined') {
+      await new Promise(res => setTimeout(res, 200)); 
+      rt = tokenStore.getRefresh();
+    }
     if (!rt) {
-      logout();
-      return;
+    console.warn('[Auth] refreshNow: refresh token missing, skip logout.');
+    return; // ❗️바로 logout() 하지 말고 무시
     }
     try {
       const res = await instance.post<{ accessToken: string; refreshToken?: string }>(
@@ -64,10 +69,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const d = decodeJWT(newAT) as { name?: string; username?: string } | null;
       setUser({ email: d?.username || "알 수 없음", name: d?.name || "User" });
       setTokenReady(true);
-
       scheduleRefresh(newAT);
+      setRefreshRetry(0);
     } catch {
-      logout();
+      if (refreshRetry < 3) {
+      setRefreshRetry(n => n + 1);
+      setTimeout(refreshNow, 10_000);
+    } else {
+      console.error("refresh 반복 실패, 세션 유지 중단");
+    }
     }
   };
 

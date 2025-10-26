@@ -26,16 +26,19 @@ interface Post {
 }
 
 type PageResp = { content: Post[]; totalPages: number };
+type SortOrder = 'latest' | 'oldest';
 
 export default function Home() {
   const [touched, setTouched] = useState(false);
   const [search, setSearch] = useState("");
   const { isMobile, isTablet, isXs, isSm, isMd, isLg } = useIsMobile();
   const [page, setPage] = useState(0);
-  const { labels, keys, loading: catLoading, error: catError } = useCategories();
+  const { labels, keys, loading: catLoading, error: catError, badgeStyle } = useCategories();
   const [selectedCat, setSelectedCat] = useState('');
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const { user, tokenReady } = useAuth();
+  const [sortOrder, setSortOrder] = useState<SortOrder>('latest');
+
 
   const safeUser = user ?? { name: "", email: "" };
 
@@ -48,6 +51,7 @@ export default function Home() {
       setPage(0);
       return;
     };
+    
     (async () => {
       try {
         const first = await fetchPage(0);
@@ -96,6 +100,10 @@ export default function Home() {
     setPage(0);
   }, [selectedCat]);
 
+  useEffect(() => {
+    setPage(0);
+  }, [sortOrder]);
+
   const PAGE_SIZE = 10;
   const term = search.trim().toLowerCase();
   let filtered = selectedCat
@@ -106,8 +114,14 @@ export default function Home() {
     filtered = filtered.filter((p) => p.title?.toLowerCase().includes(term));
   }
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const visible = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const sorted = [...filtered].sort((a, b) => {
+    const ta = new Date(a.createdAt).getTime();
+    const tb = new Date(b.createdAt).getTime();
+    return sortOrder === 'latest' ? (tb - ta) : (ta - tb);
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const visible = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const goToPage = (pageNum: number) => {
     if (pageNum >= 0 && pageNum < totalPages) setPage(pageNum);
@@ -178,7 +192,44 @@ export default function Home() {
             )
           })}
         </div>
-        <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 -mt-2 mb-4 flex justify-end">
+        <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 -mt-2 mb-4 flex items-center justify-end gap-5">
+          <div className="relative">
+            <select
+              id="sort"
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+              disabled={!tokenReady}
+              aria-label="정렬"
+              className={`
+                peer
+                w-fit
+                appearance-none
+                bg-white/95 backdrop-blur
+                text-gray-800
+                rounded-xl
+                border border-gray-300
+                shadow-sm
+                px-4 pr-10 py-2 
+                outline-none
+                transition-all duration-200
+                disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed
+              `}
+            >
+              <option value="latest">최신글</option>
+              <option value="oldest">오래된글</option>
+            </select>
+            <span
+              className="
+                pointer-events-none
+                material-symbols-outlined
+                absolute right-3 top-1/2 -translate-y-1/2
+                text-gray-500 transition-colors
+              "
+            >
+              expand_more
+            </span>
+          </div>
+
           {tokenReady ? (
             <Link
               href="/post"
@@ -206,7 +257,8 @@ export default function Home() {
               bg-gray-200 rounded-xl shadow-sm
                 cursor-pointer hover:bg-gray-400
                 flex items-stretch
-                h-[100px] sm:h-[120px] overflow-hidden"
+                h-[100px] sm:h-[120px] overflow-hidden
+                group"
               >
                 <div className="flex-1 min-w-0 px-4 py-3 flex flex-col justify-center">
                   <div className="font-semibold text-black text-base sm:text-xl truncate">{post.title}</div>
@@ -220,14 +272,20 @@ export default function Home() {
                   })}
                   </div>
                 </div>
-                <div className={`
-                  flex items-center justify-center
-                  font-bold text-sm sm:text-lg md:text-xl text-black
-                  ${colorOf(post.category)}
-                  w-16 sm:w-20 md:w-24 lg:w-28
-                  h-full px-2
-                  flex-shrink-0
-                `}>
+                <div
+                  className="flex items-center justify-center 
+                  font-bold text-sm sm:text-lg md:text-xl 
+                  text-black w-16 sm:w-20 md:w-24 lg:w-28 
+                  h-full px-2 flex-shrink-0 transition
+                  group-hover:brightness-90 
+                  rounded-none rounded-r-xl"
+                  style={{...badgeStyle(post.category),
+                    borderTopLeftRadius: 0,
+                    borderBottomLeftRadius: 0,
+                    borderTopRightRadius: '0.75rem',
+                    borderBottomRightRadius: '0.75rem',
+                  }}
+                >
                   <span className="whitespace-nowrap">
                     {labels[post.category] ?? post.category}
                   </span>
