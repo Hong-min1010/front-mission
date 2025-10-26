@@ -8,6 +8,9 @@ import useIsMobile from "../hooks/useIsMobile";
 import instance from "../axiosInstance";
 import { AxiosError } from "axios";
 import Link from "next/link";
+import { useToast } from "../components/Toast";
+import { useRouter } from "next/navigation";
+
 
 export default function Signup() {
   const [local, setLocal] = useState("");
@@ -27,6 +30,10 @@ export default function Signup() {
   const [signupMessage, setSignupMessage] = useState("");
   const [isCustomDomain, setIsCustomDomain] = useState(false);
   const [customDomain, setCustomDomain] = useState("");
+  const { showToast } = useToast();
+  const router = useRouter();
+  
+  
   
 
   const emailRegex = /^[a-zA-Z0-9]+@[^\s@]+\.[^\s@]+$/;
@@ -130,10 +137,12 @@ export default function Signup() {
         password: password,
         confirmPassword: confirmPw
       });
-      setSignupMessage("회원가입이 완료 되었습니다.");
+      showToast({ type: 'success', message: '회원가입 성공 !'});
+      router.replace(`/`);
     } catch (e: unknown) {
         if (e instanceof AxiosError) {
         const err = e as AxiosError<ErrorResponse>;
+        showToast({type: 'fail', message: '회원가입 실패 ! 다시 시도해주세요.' })
         console.log(err.response?.data.message);
       }
       }
@@ -141,13 +150,16 @@ export default function Signup() {
 
 
   return (
-    <div className={`font-sans items-center justify-items-center flex flex-col ${!isMobile ? 'px-25 py-10' : 'py-5'} `}>
+    <div className={`font-sans flex flex-col items-center justify-start
+      bg-gray-700
+      ${!isMobile ? 'px-25 py-10' : 'py-5'}
+      min-h-[calc(100svh-64px)]`}>
       <main className="flex flex-col row-start-2 items-center justify-items-center w-full">
-        <div className="flex items-center justify-center font-bold text-2xl mb-5 text-black">
-          회원가입
-        </div>
-        <div className="bg-gray-200 rounded-lg px-4 py-5 w-full max-w-[520px] mx-auto">
-          <div className="flex flex-col gap-5 items-start justify-start w-full">
+        <div className="bg-white rounded-lg px-4 py-5 w-full max-w-[520px] mx-auto">
+          <div className="flex items-center justify-center font-bold text-2xl mb-5 text-black">
+            회원가입
+          </div>
+          <div className="flex flex-col gap-5 items-start justify-start w-full bg-gray-300 rounded-lg px-4 py-5">
             <EmailInputBox
               label="Email"
               local={local}

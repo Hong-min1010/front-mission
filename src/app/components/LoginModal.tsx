@@ -3,12 +3,10 @@
 import { useState } from "react";
 import EmailInputBox from "./EmailInput";
 import CommonInputBox from "./CommonInputBox";
-import useIsMobile from "../hooks/useIsMobile";
 import instance from "../axiosInstance";
 import { AxiosError } from "axios";
-import Link from "next/link";
-import decodeJWT from "../utils/decodeJWT";
 import { useAuth } from "../auth/AuthContext";
+import { useToast } from "./Toast";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -25,8 +23,9 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}
   const [pwError, setPwError] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState(false);
-  // const { isXs, isSm, isMd, isLg, isMobile, isTablet } = useIsMobile();
   const [rememberLogin, setRememberLogin] = useState(false);
+  const { showToast } = useToast();
+
   if(!isOpen) return null;
   
   const emailRegex = /^[a-zA-Z0-9]+@[^\s@]+\.[^\s@]+$/;
@@ -65,12 +64,14 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}
       const refreshToken = res.data.refreshToken;
 
       login(accessToken, refreshToken, rememberLogin);
+      showToast({ type: 'success', message: '로그인 성공 !' });
       onClose();
       console.log("Login 성공")
     } catch(e) {
       if (e instanceof AxiosError) {
         console.error(e.response?.data.message);
       }
+      showToast({ type: 'fail', message: '로그인 실패 ! 아이디와 비밀번호를 확인해주세요.'})
       return;
     }
   }
@@ -121,7 +122,7 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}
                   id="rememberMe"
                   checked={rememberLogin}
                   onChange={(e) => setRememberLogin(e.target.checked)}
-                  className="w-4 h-4"
+                  className="w-4 h-4 cursor-pointer"
                 />
                 <label htmlFor="rememberMe" className="text-sm text-gray-700">
                   로그인 정보 저장

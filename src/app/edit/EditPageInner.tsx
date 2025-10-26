@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import instance from '../axiosInstance';
-import decodeJWT from '../utils/decodeJWT';
 import Sidebar from '../components/Sidebar';
 import CommonInputBox from '../components/CommonInputBox';
 import useIsMobile from '../hooks/useIsMobile';
 import useCategories from '../hooks/useCategories';
+import { useAuth } from '../auth/AuthContext';
+import { useToast } from '../components/Toast';
 
 
 interface BoardDetail {
@@ -26,11 +27,12 @@ export default function EditPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const boardId = searchParams.get('id');
+  const { user, tokenReady } = useAuth();
+  const safeUser = user ?? { name: '', email: '' };
 
   const { isSm } = useIsMobile();
   const isResponsive = isSm;
 
-  const [user, setUser] = useState<{ email?: string; name?: string }>({});
   const [detail, setDetail] = useState<BoardDetail | null>(null);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -43,20 +45,13 @@ export default function EditPageInner() {
 
   const { labels, keys, loading: catLoading, error: catError } = useCategories();
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      const decoded = decodeJWT(token);
-      if (decoded) {
-        setUser({
-          email: decoded.username || '알 수 없음',
-          name: decoded.name || 'User',
-        });
-      }
-    }
-  }, []);
+  const { showToast } = useToast();
 
   useEffect(() => {
+    if(!tokenReady) {
+      setLoading(true);
+      return;
+    }
     if (!boardId) return;
     (async () => {
       setLoading(true);
@@ -75,12 +70,12 @@ export default function EditPageInner() {
         }
       } catch (e) {
         console.error(e);
-        alert('게시글 정보를 불러오지 못했습니다.');
+        showToast({ type: 'fail', message: '게시글 정보를 불러오지 못했습니다.'})
       } finally {
         setLoading(false);
       }
     })();
-  }, [boardId]);
+  }, [tokenReady, boardId]);
 
   const handleFileChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const f = e.target.files?.[0];
@@ -121,11 +116,11 @@ export default function EditPageInner() {
       await instance.patch(`/boards/${boardId}`, form, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-
-      alert('게시글이 수정되었습니다.');
-      router.push(`/boards/${boardId}`);
+      showToast({ type: 'success', message: '게시글이 수정되었습니다.' })
+      router.replace(`/boards/${boardId}`);
     } catch (e) {
       console.error(e);
+      showToast({ type: 'fail', message: '게시글 수정에 실패했습니다.' })
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +130,7 @@ export default function EditPageInner() {
     <div className="flex flex-row h-screen bg-gray-700 text-white overflow-hidden">
       {!isResponsive && (
         <Sidebar
-          user={user}
+          user={safeUser}
           search={''}
           setSearch={() => {}}
           touched={false}
@@ -157,11 +152,11 @@ export default function EditPageInner() {
             </button>
           </div>
 
-          {loading && (
+          {(loading || !tokenReady)&& (
             <div className="w-full bg-gray-600 animate-pulse rounded-xl h-40" />
           )}
 
-          {!loading && detail && (
+          {!loading && tokenReady && detail && (
             <>
               <div className="flex flex-wrap gap-3 my-2">
                 {catLoading && (

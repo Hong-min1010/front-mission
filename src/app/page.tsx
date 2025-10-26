@@ -97,7 +97,15 @@ export default function Home() {
   }, [selectedCat]);
 
   const PAGE_SIZE = 10;
-  const filtered = selectedCat ? allPosts.filter(p => p.category === selectedCat) : allPosts;
+  const term = search.trim().toLowerCase();
+  let filtered = selectedCat
+    ? allPosts.filter((p) => p.category === selectedCat)
+    : allPosts;
+
+  if(term) {
+    filtered = filtered.filter((p) => p.title?.toLowerCase().includes(term));
+  }
+
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const visible = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
@@ -125,8 +133,15 @@ export default function Home() {
           <div className="w-full px-4 pt-2">
             <SearchBar
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onSubmit={() => {}}
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setTouched(true)
+                setPage(0)
+              }}
+              onSubmit={() => {
+                setTouched(true);
+                setPage(0);
+              }}
               touched={touched}
               errorMessage="해당 게시글이 존재하지 않습니다."
             />

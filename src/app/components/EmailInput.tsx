@@ -150,7 +150,7 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
             onClick={onButtonClick}
             className={`min-w-[80px] sm:w-full h-[48px] px-4 py-3 rounded-lg font-semibold 
               transition-colors duration-300 cursor-pointer
-              ${isDisabled ? "bg-gray-300 text-gray-500" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
+              ${isDisabled ? "bg-white text-gray-500" : "bg-blue-500 hover:bg-blue-600 text-white"}`}
             disabled={isDisabled}
           >
             {buttonText}

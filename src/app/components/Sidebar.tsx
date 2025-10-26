@@ -102,10 +102,8 @@ export default function Sidebar({
               touched={touched ?? false}
               errorMessage="해당 게시글이 존재하지 않습니다."
               placeholder="제목으로 검색하세요"
-              // 🔧 포커스/블러/키다운 전달
               onFocus={() => setFocused(true)}
               onBlur={() => {
-                // 클릭 선택을 위해 blur 즉시 닫지 않고 약간 지연
                 setTimeout(() => setFocused(false), 120);
               }}
               onKeyDown={handleKeyDown}
