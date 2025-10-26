@@ -6,6 +6,7 @@ import instance from '../../axiosInstance';
 import Sidebar from '../../components/Sidebar';
 import decodeJWT from '../../utils/decodeJWT';
 import useIsMobile from '../../hooks/useIsMobile';
+import { useToast } from '@/app/components/Toast';
 
 const CATEGORY_LABEL = {
   NOTICE: '공지',
@@ -46,6 +47,9 @@ export default function BoardDetailPage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const { showToast } = useToast();
+
   const isResponsive = isSm;
 
   useEffect(() => {
@@ -77,6 +81,24 @@ export default function BoardDetailPage() {
     })();
   }, [params?.id]);
 
+  const handleClickDelete = () => {
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    setDeleting(true);
+    try {
+      showToast({ type: 'success', message: '게시글이 삭제되었습니다.' });
+      setConfirmOpen(false);
+      router.replace('/');
+    } catch(e) {
+      setConfirmOpen(false);
+      showToast({ type: 'fail', message: '삭제에 실패했습니다. 다시 시도해주세요.' })
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const formattedDate = useMemo(() => {
     if (!detail?.createdAt) return '';
     const d = new Date(detail.createdAt);
@@ -96,20 +118,6 @@ export default function BoardDetailPage() {
   const onEdit = () => {
     router.push(`/edit?id=${params.id}`);
   };
-
-  const onDelete = async () => {
-    if (!confirm('정말 삭제하시겠습니까 ?')) return;
-    setDeleting(true);
-    try {
-      await instance.delete(`/boards/${params.id}`);
-      alert('삭제되었습니다.');
-      router.push('/');
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setDeleting(true);
-    }
-  }
 
   return (
     <div className="flex flex-row h-screen bg-gray-700 text-white">
@@ -143,7 +151,7 @@ export default function BoardDetailPage() {
                 수정
               </button>
               <button
-                onClick={onDelete}
+                onClick={handleClickDelete}
                 disabled={loading || deleting}
                 className={`px-4 py-2 rounded-lg ${loading || deleting ? 'bg-gray-500 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600 cursor-pointer'} `}
               >
@@ -184,6 +192,44 @@ export default function BoardDetailPage() {
             </article>
           )}
         </div>
+        {confirmOpen && (
+          <div
+            className="fixed inset-0 z-[9998] bg-black/40 flex items-center justify-center"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setConfirmOpen(false);
+            }}
+          >
+            <div className="relative w-[min(92vw,360px)] rounded-xl bg-white shadow-xl border border-black/10 p-5">
+              <button
+                aria-label="닫기"
+                className="absolute right-3 top-3 text-black/70 hover:text-black transition cursor-pointer"
+                onClick={() => setConfirmOpen(false)}
+              >
+                <span className="material-symbols-outlined">close</span>
+              </button>
+              <div className="mt-2 mb-5 text-center text-black font-semibold">
+                정말 삭제하시겠습니까 ?
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleConfirmDelete}
+                  disabled={deleting}
+                  className={`flex-1 h-10 rounded-lg text-white font-bold transition cursor-pointer ${
+                    deleting ? 'bg-red-300 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600'
+                  }`}
+                >
+                  삭제
+                </button>
+                <button
+                  onClick={() => setConfirmOpen(false)}
+                  className="flex-1 h-10 rounded-lg bg-gray-200 hover:bg-gray-300 text-black font-bold transition cursor-pointer"
+                >
+                  취소
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

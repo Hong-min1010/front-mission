@@ -6,7 +6,7 @@ import EmailInputBox from "../components/EmailInput";
 import CommonInputBox from "../components/CommonInputBox";
 import useIsMobile from "../hooks/useIsMobile";
 import instance from "../axiosInstance";
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
 import Link from "next/link";
 import { useToast } from "../components/Toast";
 import { useRouter } from "next/navigation";
@@ -65,13 +65,14 @@ export default function Signup() {
     setEmailError(null);
   };
 
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
     const email = `${local}@${isCustomDomain ? customDomain : domain}`;
     if (!emailRegex.test(email)) {
       setEmailError("올바른 이메일 형식으로 입력해주세요.");
       setIsEmailVerified(false);
+      return;
     } else {
-      setEmailError("사용 가능한 이메일입니다.");
+      setEmailError("사용 가능한 이메일 형식입니다.")
       setIsEmailVerified(true);
     }
   };
@@ -107,10 +108,16 @@ export default function Signup() {
     passwordRegex.test(password);
 
   const handleSignup = async () => {
-    const email = `${local}@${domain}`;
+    const effectiveDomain = isCustomDomain ? customDomain : domain;
+    const email = `${local}@${effectiveDomain}`;
 
     if(!emailRegex.test(email)) {
       setEmailError("올바른 이메일 형식으로 입력해주세요.")
+      return;
+    }
+
+    if(isCustomDomain && !customDomain.trim()) {
+      setEmailError("도메인을 입력해주세요.")
       return;
     }
 
@@ -140,12 +147,8 @@ export default function Signup() {
       showToast({ type: 'success', message: '회원가입 성공 !'});
       router.replace(`/`);
     } catch (e: unknown) {
-        if (e instanceof AxiosError) {
-        const err = e as AxiosError<ErrorResponse>;
-        showToast({type: 'fail', message: '회원가입 실패 ! 다시 시도해주세요.' })
-        console.log(err.response?.data.message);
-      }
-      }
+      showToast({type: 'fail', message: '회원가입 실패 ! 다른 이메일로 시도해주세요.' })
+    }
   }
 
 
@@ -169,6 +172,8 @@ export default function Signup() {
               dropdownOpen={dropdownOpen}
               setDropdownOpen={setDropdownOpen}
               error={emailError || undefined}
+              feedbackText={emailError || undefined}
+              feedbackType={isEmailVerified ? "success" : emailError ? "error" : undefined}
               domainList={domains}
               buttonText="확인"
               onButtonClick={handleButtonClick}

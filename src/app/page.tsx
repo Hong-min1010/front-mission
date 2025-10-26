@@ -4,19 +4,10 @@ import { useState, useEffect } from "react";
 import SearchBar from "./components/SearchBar";
 import useIsMobile from "./hooks/useIsMobile";
 import instance from "./axiosInstance";
-import decodeJWT from "./utils/decodeJWT";
 import Sidebar from "./components/Sidebar";
 import Link from "next/link";
 import useCategories from "./hooks/useCategories";
 import { useAuth } from "./auth/AuthContext";
-
-const CATEGORY_COLOR: Record<string, string> = {
-  NOTICE: 'bg-[#ead0d1]',
-  FREE:   'bg-[#d5ebd6]',
-  QNA:    'bg-[#f8f5c6]',
-  ETC:    'bg-[#e3f6f4]',
-};
-const colorOf = (key: string) => CATEGORY_COLOR[key] ?? 'bg-gray-200';
 
 interface Post {
   id: number;
@@ -43,6 +34,16 @@ export default function Home() {
   const safeUser = user ?? { name: "", email: "" };
 
   const isResponsive = isSm;
+
+  useEffect(() => {
+    if(!tokenReady) {
+      const key = "loginModalShown";
+      if(!sessionStorage.getItem(key)) {
+        window.dispatchEvent(new Event("OPEN_LOGIN_MODAL"));
+        sessionStorage.setItem(key, "1");
+      }
+    }
+  }, [tokenReady]);
 
   useEffect(() => {
     if (!tokenReady) {

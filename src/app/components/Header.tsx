@@ -2,14 +2,20 @@
 
 import { useState, useEffect } from "react";
 import useIsMobile from "../hooks/useIsMobile";
-import LoginModal from "./LoginModal";
 import Link from "next/link";
 import { useAuth } from "../auth/AuthContext";
+import LoginModal from "./LoginModal";
 
 export default function Header() {
   const { isXs, isSm, isMd, isLg, isMobile, isTablet } = useIsMobile();
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const { user, logout, tokenReady } = useAuth();
+
+  useEffect(() => {
+    const handler = () => setIsLoginModalOpen(true);
+    window.addEventListener("OPEN_LOGIN_MODAL", handler);
+    return () => window.removeEventListener("OPEN_LOGIN_MODAL", handler);
+  }, []);
 
   return (
     <header className={`${isMobile ? 'px-5 py-2' : 'px-20 py-4'} border-b border-gray-300 w-full flex items-center justify-between`}>
@@ -23,7 +29,7 @@ export default function Header() {
               <button className="cursor-pointer" onClick={() => setIsLoginModalOpen(true)}>
                 Login
               </button>
-              <LoginModal 
+              <LoginModal
               isOpen={isLoginModalOpen}
               onClose={() => setIsLoginModalOpen(false)}
               onLoginSuccess= {() => setIsLoginModalOpen(false)}/>

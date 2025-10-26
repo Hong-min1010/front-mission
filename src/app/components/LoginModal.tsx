@@ -7,6 +7,7 @@ import instance from "../axiosInstance";
 import { AxiosError } from "axios";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "./Toast";
+import Link from "next/link";
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -19,6 +20,8 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}
   const [local, setLocal] = useState("");
   const [domain, setDomain] = useState("선택");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isCustomDomain, setIsCustomDomain] = useState(false);
+  const [customDomain, setCustomDomain] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [pwError, setPwError] = useState("");
   const [password, setPassword] = useState("");
@@ -47,6 +50,7 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}
   };
 
   const handleLogin = async () => {
+    const effectiveDomain = isCustomDomain ? customDomain : domain;
     const email = `${local}@${domain}`;
 
     if(!emailRegex.test(email)) {
@@ -103,6 +107,10 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}
                   handleDomainSelect={handleDomainSelect}
                   handleLocalChange={handleLocalChange}
                   showButton={false}
+                  isCustomDomain={isCustomDomain}
+                  customDomain={customDomain}
+                  setCustomDomain={setCustomDomain}
+                  setIsCustomDomain={setIsCustomDomain}
                 />
                 <div className="flex flex-col w-full gap-3 sm:flex-col">
                   <div className="text-black font-bold text-lg">Password</div>
@@ -129,14 +137,23 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}
                 </label>
               </div>
               </div>
-              {/* Btn */}
-              <div className="flex flex-row justify-between mt-10 gap-20">
-                <button
-                  className="flex items-center justify-center w-full bg-green-300 border-2 border-green-500 rounded-lg px-2 py-2 text-black font-bold text-lg cursor-pointer"
-                  onClick={handleLogin}
-                >
-                  Login
-                </button>
+              <div className="flex gap-3 mt-10">
+                <Link href='/' className="w-full">
+                  <button
+                    className="w-full bg-green-300 border-2 border-green-500 hover:bg-green-400 rounded-lg px-2 py-2 text-black font-bold text-lg cursor-pointer"
+                    onClick={handleLogin}
+                  >
+                    Login
+                  </button>
+                </Link>
+                <Link href="/signup" className="w-full" onClick={onClose}>
+                  <button
+                    className="w-full bg-blue-300 border-2 border-blue-400 rounded-lg px-2 py-2 text-black font-bold text-lg hover:bg-blue-400 cursor-pointer"
+                    aria-label="회원가입 페이지로 이동"
+                  >
+                    회원가입
+                  </button>
+                </Link>
                 {pwError && (
                   <div className="text-red-500 text-sm mt-2 w-full text-center">
                     {pwError}

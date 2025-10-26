@@ -85,6 +85,12 @@ export default function EditPageInner() {
     }
   };
 
+  const handleDeleteFile = () => {
+    setFile(null);
+    setPreviewUrl(null);
+    return;
+  }
+
   const handlePickFile = () => fileInputRef.current?.click();
   const clearFile = () => {
     setFile(null);

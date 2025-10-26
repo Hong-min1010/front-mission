@@ -105,7 +105,6 @@ export default function Write() {
       setContent('');
       setCategory('');
       clearFile();
-      alert('게시글이 등록되었습니다.');
       console.log('created id:', res?.data?.id);
     } catch (e) {
       console.error(e);
