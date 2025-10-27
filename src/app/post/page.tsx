@@ -9,6 +9,7 @@ import CommonInputBox from "../components/CommonInputBox";
 import useCategories from "../hooks/useCategories";
 import { useAuth } from "../auth/AuthContext";
 import { useRouter } from "next/navigation";
+import { useToast } from "../components/Toast";
 
 
 export default function Write() {
@@ -24,6 +25,7 @@ export default function Write() {
   const { user, tokenReady } = useAuth();
   const safeUser = user ?? { name: "", email: "" };
   const router = useRouter();
+  const { showToast } = useToast();
 
   const { labels, keys, loading: catLoading, error: catError } = useCategories();
 
@@ -94,7 +96,7 @@ export default function Write() {
       });
 
       const createdId = res?.data?.id;
-      alert('게시글이 등록되었습니다.');
+      showToast({ type: 'success', message: '게시글이 등록되었습니다.' });
       if(createdId) {
         router.replace(`/boards/${createdId}`);
       } else {
@@ -105,29 +107,29 @@ export default function Write() {
       setContent('');
       setCategory('');
       clearFile();
-      console.log('created id:', res?.data?.id);
     } catch (e) {
-      console.error(e);
-      alert('등록 중 오류가 발생했습니다.');
+      showToast({ type: 'fail', message: '등록 중 오류가 발생했습니다.' });
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="flex flex-row h-screen bg-gray-700 text-white">
+    <div className="flex flex-row min-h-dvh bg-gray-700 text-white items-stretch">
       {!isResponsive && (
-        <Sidebar
-          user={user}
-          search={search}
-          setSearch={setSearch}
-          touched={touched}
-          setTouched={setTouched}
-          showSearch={false}
-        />
+        <div className="sticky top-0 h-dvh overflow-y-auto overflow-x-hidden shrink-0 border-r border-gray-600">
+          <Sidebar
+            user={user}
+            search={search}
+            setSearch={setSearch}
+            touched={touched}
+            setTouched={setTouched}
+            showSearch={false}
+          />
+        </div>
       )}
       {/* MAIN */}
-      <main className="flex flex-col w-full relative p-5 items-center pb-10">
+      <main className="flex flex-col flex-1 relative p-5 items-center pb-10">
         <div className="w-full max-w-5xl flex items-center justify-between mb-4">
           <h1 className="text-2xl sm:text-3xl font-extrabold">게시글 작성</h1>
           <button
@@ -138,57 +140,48 @@ export default function Write() {
             뒤로가기
           </button>
         </div>
-        <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center w-full gap-3 sm:gap-6 max-w-5xl mx-auto my-4 sm:my-6">
-          <div className="flex flex-row flex-wrap justify-center items-center gap-2 sm:gap-3">
-            <div className="font-bold text-lg sm:text-2xl">카테고리를 선택해주세요.</div>
-            <div className="font-bold text-lg sm:text-2xl text-red-400">(필수)</div>
+        <section className="w-full max-w-5xl">
+          <div className="flex items-baseline gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold">카테고리</h2>
+            <span className="text-red-400 font-bold">(필수)</span>
           </div>
-          {catLoading && <span className="text-sm opacity-80">카테고리 불러오는 중…</span>}
-          {catError && <span className="text-sm text-red-300">불러오기 실패</span>}
-          {!catLoading && !catError && (
-            <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mt-2 sm:mt-0">
-              {keys.map((k) => {
-                const isActive = category === k;
-                return (
-                  <button
-                    key={k}
-                    onClick={() => setCategory(k)}
-                    className={`cursor-pointer font-bold rounded-lg border transition px-3 py-1 text-sm sm:text-lg ${
-                      isActive
-                        ? "bg-gray-700 text-white border-white"
-                        : "bg-white text-gray-700 hover:bg-gray-200 border-white"
-                    }`}
-                  >
-                    {labels[k]}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col w-full max-w-5xl my-4 sm:my-6">
-          <div className="flex flex-col sm:flex-row flex-wrap items-center gap-2 sm:gap-4">
-            <div className="flex flex-row gap-1 sm:gap-2 items-center">
-              <div className="font-bold text-lg sm:text-2xl">첨부파일 등록</div>
-              <div className="font-bold text-lg sm:text-2xl text-red-400">(선택)</div>
-            </div>
+          <div className="mt-3 flex flex-wrap gap-2 sm:gap-3">
+            {catLoading && <span className="text-sm opacity-80">카테고리 불러오는 중…</span>}
+            {catError && <span className="text-sm text-red-300">불러오기 실패</span>}
+            {!catLoading && !catError && keys.map((k) => {
+              const isActive = category === k;
+              return (
+                <button
+                  key={k}
+                  onClick={() => setCategory(k)}
+                  className={`cursor-pointer px-2 py-1 text-lg font-bold rounded-lg border transition-all
+                    ${isActive
+                      ? "bg-gray-700 text-white"
+                      : "bg-white text-gray-700 hover:bg-gray-500 border-white"}`}
+                >
+                  {labels[k]}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+        <section className="w-full max-w-5xl mt-8">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-xl sm:text-2xl font-bold">첨부파일 등록</h2>
+            <span className="text-red-400 font-bold">(선택)</span>
             <button
               onClick={handlePickFile}
-              className="bg-white text-black rounded-lg px-4 sm:px-5 py-2 sm:py-3 text-base sm:text-xl font-bold hover:bg-gray-200 cursor-pointer"
+              className="ml-auto bg-white text-black rounded-lg px-4 sm:px-5 py-2 sm:py-2.5 text-base font-bold hover:bg-gray-200 cursor-pointer"
             >
               첨부파일 추가하기
             </button>
             <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
+              id="attachment" name="attachment" ref={fileInputRef} type="file" accept="image/*"
+              className="hidden" onChange={handleFileChange}
             />
           </div>
-
           {file && (
-            <div className="mt-3 flex flex-col sm:flex-row items-center gap-3 sm:gap-4">
+            <div className="mt-4 flex items-start gap-4">
               {previewUrl && (
                 <img
                   src={previewUrl}
@@ -196,37 +189,46 @@ export default function Write() {
                   className="w-32 h-32 sm:w-48 sm:h-48 p-2 sm:p-3 object-cover rounded-md bg-white"
                 />
               )}
-              <div className="text-base sm:text-lg">
-                <div className="font-semibold">{file.name}</div>
-                <div className="text-sm opacity-80">{(file.size / 1024).toFixed(1)} KB</div>
+              <div className="flex flex-col">
+                <div className="font-semibold break-words">{file.name}</div>
+                <button
+                  onClick={clearFile}
+                  className="mt-3 w-fit bg-red-500 hover:bg-red-600 cursor-pointer rounded-md px-3 py-2 text-white text-sm"
+                >
+                  제거
+                </button>
               </div>
-              <button
-                onClick={clearFile}
-                className="ml-0 sm:ml-auto bg-red-500 hover:bg-red-600 cursor-pointer rounded-md px-3 py-2 text-white text-sm sm:text-base"
-              >
-                제거
-              </button>
             </div>
           )}
-        </div>
+        </section>
         {/* Title */}
-        <div className="flex flex-col w-full gap-3 sm:gap-5 mb-4 sm:mb-6 max-w-5xl">
+        <section className="w-full max-w-5xl mt-8">
+          <label htmlFor="postTitle" className="block mb-2 text-base sm:text-lg font-semibold">
+            제목
+          </label>
           <CommonInputBox
+            id="postTitle"
+            name="postTitle"
             placeholder="게시글 제목을 입력해주세요."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             containerClassName="w-full"
             inputClassName="text-lg sm:text-2xl font-bold"
           />
-        </div>
-        <div className="w-full max-w-5xl">
+        </section>
+        <section className="w-full max-w-5xl mt-6">
+          <label htmlFor="postContent" className="block mb-2 text-base sm:text-lg font-semibold">
+            내용
+          </label>
           <textarea
+            id="postContent"
+            name="postContent"
             placeholder="게시글 내용을 입력해주세요."
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full min-h-[240px] sm:min-h-[320px] rounded-xl p-3 sm:p-4 text-base sm:text-xl bg-white text-black outline-none border border-gray-700"
+            className="w-full min-h-[240px] sm:min-h-[320px] rounded-xl p-4 text-base sm:text-xl bg-white text-black outline-none border border-gray-700"
           />
-        </div>
+        </section>
         <div className="w-full max-w-5xl flex justify-end pt-5">
           <button
             onClick={handleSubmit}

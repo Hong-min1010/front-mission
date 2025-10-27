@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useRef } fro
 import decodeJWT from "@/app/utils/decodeJWT";
 import instance from "../axiosInstance";
 import { tokenStore } from "../utils/tokenStore";
+import { useRouter } from "next/navigation";
 
 type User = { email?: string; name?: string } | null;
 
@@ -20,6 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User>(null);
   const [tokenReady, setTokenReady] = useState(false);
   const [refreshRetry, setRefreshRetry] = useState(0);
+  const router = useRouter();
 
 
   const refreshTimer = useRef<number | null>(null);
@@ -75,9 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (refreshRetry < 3) {
       setRefreshRetry(n => n + 1);
       setTimeout(refreshNow, 10_000);
-    } else {
-      console.error("refresh 반복 실패, 세션 유지 중단");
-    }
+      }
     }
   };
 
@@ -122,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenStore.clear();
     setUser(null);
     setTokenReady(false);
+    router.replace('/');
   };
 
   return (

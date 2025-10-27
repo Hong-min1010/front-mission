@@ -42,6 +42,7 @@ export default function EditPageInner() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [removeExistingImage, setRemoveExistingImage] = useState(false);
 
   const { labels, keys, loading: catLoading, error: catError } = useCategories();
 
@@ -69,7 +70,6 @@ export default function EditPageInner() {
           setPreviewUrl(resolved);
         }
       } catch (e) {
-        console.error(e);
         showToast({ type: 'fail', message: '게시글 정보를 불러오지 못했습니다.'})
       } finally {
         setLoading(false);
@@ -82,13 +82,16 @@ export default function EditPageInner() {
     if (f) {
       setFile(f);
       setPreviewUrl(URL.createObjectURL(f));
+      setRemoveExistingImage(false);
     }
   };
 
   const handleDeleteFile = () => {
+    setRemoveExistingImage(true);
     setFile(null);
     setPreviewUrl(null);
-    return;
+    setDetail((prev) => (prev ? { ...prev, imageUrl: null } : prev));
+    if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
   const handlePickFile = () => fileInputRef.current?.click();
@@ -101,7 +104,7 @@ export default function EditPageInner() {
   const handleSubmit = async () => {
     if (!boardId) return;
     if (!title.trim() || !content.trim() || !category) {
-      alert('모든 필드를 입력해주세요.');
+      showToast({ type: 'fail', message: '모든 필드를 입력해주세요.' });
       return;
     }
 
@@ -125,7 +128,6 @@ export default function EditPageInner() {
       showToast({ type: 'success', message: '게시글이 수정되었습니다.' })
       router.replace(`/boards/${boardId}`);
     } catch (e) {
-      console.error(e);
       showToast({ type: 'fail', message: '게시글 수정에 실패했습니다.' })
     } finally {
       setSubmitting(false);
@@ -191,12 +193,16 @@ export default function EditPageInner() {
                   })}
               </div>
               <CommonInputBox
+                id='postTitle'
+                name='postTitle'
                 placeholder="게시글 제목을 입력해주세요."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 containerClassName="w-full text-black"
               />
               <textarea
+                id='postContent'
+                name='postContent'
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="게시글 내용을 입력해주세요."
@@ -206,16 +212,16 @@ export default function EditPageInner() {
                 <div className="flex gap-3 items-center">
                   <button
                     onClick={handlePickFile}
-                    className="bg-white text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200"
+                    className="bg-white text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 cursor-pointer"
                   >
                     이미지 선택
                   </button>
-                  {file && (
+                  {(previewUrl || detail.imageUrl) && (
                     <button
-                      onClick={clearFile}
-                      className="bg-red-500 px-3 py-2 rounded-lg text-white hover:bg-red-600"
+                      onClick={handleDeleteFile}
+                      className='bg-red-500 px-3 py-2 rounded-lg text-white hover:bg-red-600 cursor-pointer'
                     >
-                      제거
+                      이미지 삭제
                     </button>
                   )}
                 </div>
@@ -226,10 +232,15 @@ export default function EditPageInner() {
                       alt="미리보기"
                       className="w-full h-auto max-h-[50vh] object-contain rounded-lg bg-white mt-2"
                     />
+                    {removeExistingImage && (
+                      <p className='text-sm text-red-300 mt-2'>게시글 저장 시 기존 이미지가 삭제됩니다.</p>
+                    )}
                   </div>
                 )}
 
                 <input
+                  id='imageUUpload'
+                  name='imageUUpload'
                   type="file"
                   ref={fileInputRef}
                   className="hidden"
@@ -239,11 +250,18 @@ export default function EditPageInner() {
                 <div className="flex justify-end mt-6">
                   <button
                     onClick={handleSubmit}
-                    disabled={submitting}
-                    className={`px-6 py-3 rounded-lg text-xl font-bold transition cursor-pointer ${
-                      submitting
+                    disabled={
+                      submitting ||
+                      !title.trim() ||
+                      !content.trim() ||
+                      !category.trim()}
+                    className={`px-6 py-3 rounded-lg text-xl font-bold transition ${
+                      submitting ||
+                      !title.trim() ||
+                      !content.trim() ||
+                      !category.trim()
                         ? 'bg-gray-500 cursor-not-allowed'
-                        : 'bg-blue-500 hover:bg-blue-600'
+                        : 'bg-blue-500 hover:bg-blue-600 cursor-pointer'
                     }`}
                   >
                     {submitting ? '수정 중…' : '수정 완료'}

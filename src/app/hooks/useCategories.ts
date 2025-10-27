@@ -34,6 +34,7 @@ export default function useCategories() {
       setKeys([]);
       setLoading(false);
       setError(null);
+      return;
     }
 
     let cancel = false;

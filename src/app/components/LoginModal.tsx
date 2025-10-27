@@ -70,11 +70,8 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}
       login(accessToken, refreshToken, rememberLogin);
       showToast({ type: 'success', message: '로그인 성공 !' });
       onClose();
-      console.log("Login 성공")
     } catch(e) {
-      if (e instanceof AxiosError) {
-        console.error(e.response?.data.message);
-      }
+      if (e instanceof AxiosError)
       showToast({ type: 'fail', message: '로그인 실패 ! 아이디와 비밀번호를 확인해주세요.'})
       return;
     }
@@ -128,6 +125,7 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}
                 <input
                   type="checkbox"
                   id="rememberMe"
+                  name="rememberMe"
                   checked={rememberLogin}
                   onChange={(e) => setRememberLogin(e.target.checked)}
                   className="w-4 h-4 cursor-pointer"

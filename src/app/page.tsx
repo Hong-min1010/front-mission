@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import SearchBar from "./components/SearchBar";
 import useIsMobile from "./hooks/useIsMobile";
 import instance from "./axiosInstance";
@@ -30,10 +30,11 @@ export default function Home() {
   const { user, tokenReady } = useAuth();
   const [sortOrder, setSortOrder] = useState<SortOrder>('latest');
 
-
   const safeUser = user ?? { name: "", email: "" };
 
   const isResponsive = isSm;
+  const skipCatInit = useRef(true);
+  const skipSortInit = useRef(true);
 
   useEffect(() => {
     if(!tokenReady) {
@@ -49,7 +50,6 @@ export default function Home() {
     if (!tokenReady) {
       setAllPosts([]);
       setSelectedCat('');
-      setPage(0);
       return;
     };
     
@@ -62,7 +62,6 @@ export default function Home() {
           merged = merged.concat(next.content ?? []);
         }
         setAllPosts(merged);
-        setPage(0);
       } catch {
         setAllPosts([]);
       }
@@ -73,8 +72,6 @@ export default function Home() {
     const res = await instance.get("/boards", {
       params: { page: pageNum, size: 50 },
     });
-
-    console.log('res >>>>>>', res.data?.content)
     return res.data as PageResp;
   };
 
@@ -89,19 +86,25 @@ export default function Home() {
           merged = merged.concat(next.content ?? []);
         }
         setAllPosts(merged);
-        setPage(0);
       } catch (e) {
-        console.error(e);
         setAllPosts([]);
       }
     })();
   }, [tokenReady]);
 
   useEffect(() => {
+    if (skipCatInit.current) {
+      skipCatInit.current = false;
+      return;
+    }
     setPage(0);
   }, [selectedCat]);
 
   useEffect(() => {
+    if (skipSortInit.current) {
+      skipSortInit.current = false;
+      return;
+    }
     setPage(0);
   }, [sortOrder]);
 
@@ -124,26 +127,46 @@ export default function Home() {
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const visible = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
+  useEffect(() => {
+    const saved = sessionStorage.getItem('lastPage');
+    if (saved) setPage(Number(saved));
+  }, []);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem('lastPage');
+    if (!saved) return;
+
+    const savedPage = Number(saved);
+    const maxPage = Math.max(0, Math.ceil(sorted.length / PAGE_SIZE) - 1);
+    const target = Math.min(savedPage, maxPage);
+
+    setPage(prev => (prev === target ? prev : target));
+
+  }, [sorted.length]);
+
   const goToPage = (pageNum: number) => {
     if (pageNum >= 0 && pageNum < totalPages) setPage(pageNum);
+    sessionStorage.setItem('lastPage', String(pageNum));
   };
 
   return (
-    <div className="flex flex-row h-screen bg-gray-700 text-white overflow-hidden">
+    <div className="flex flex-row min-h-dvh bg-gray-700 text-white items-stretch">
       {!isResponsive && (
-        <Sidebar
-          user={safeUser}
-          search={search}
-          setSearch={setSearch}
-          touched={touched} 
-          setTouched={setTouched} 
-          showSearch
-          posts={allPosts}
-        />
+        <div className="sticky top-0 h-dvh overflow-y-auto overflow-x-hidden shrink-0 border-r border-gray-600">
+          <Sidebar
+            user={safeUser}
+            search={search}
+            setSearch={setSearch}
+            touched={touched} 
+            setTouched={setTouched} 
+            showSearch
+            posts={allPosts}
+          />
+        </div>
       )}
 
       {/* MAIN */}
-      <main className="flex flex-col flex-1 min-h-0 overflow-y-auto relative px-5 items-center">
+      <main className="flex flex-col flex-1 relative px-5 items-center">
         {isResponsive && (
           <div className="w-full px-4 pt-2">
             <SearchBar
@@ -162,76 +185,59 @@ export default function Home() {
             />
           </div>
         )}
-        <div className="flex flex-row w-full justify-end gap-3 max-w-6xl mx-auto my-6">
-          <button
-            onClick={() => setSelectedCat("")}
-            disabled={!tokenReady}
-            className={`cursor-pointer px-2 py-1 text-lg font-bold rounded-lg border transition-all
-              ${selectedCat === ""
-                ? "bg-gray-700 text-white"
-                : "bg-white text-gray-700 hover:bg-gray-500 border-white"}`}
-          >
-            전체
-          </button>
-          {catLoading && (
-            <div className="text-sm opacity-80">카테고리 불러오는 중…</div>
-          )}
-          {catError && (
-            <div className="text-lg text-red-300 flex items-center">로그인 후 이용해주세요.</div>
-          )}
-          {!catLoading && !catError && keys.map((k) => {
-            const isActive = selectedCat === k;
-            return (
+        {tokenReady && (
+          <>
+            <div className="flex flex-row w-full justify-end gap-3 max-w-6xl mx-auto my-6">
               <button
-                key={k}
-                onClick={() => setSelectedCat(k)}
-                className={`cursor-pointer px-2 py-1 text-lg font-bold hover:bg-gray-500 rounded-lg border border-white text-gray-700
-                ${isActive ? "bg-gray-700 text-white" : "bg-white text-gray-700 hover:bg-gray-500 border-white" } `}
+                onClick={() => setSelectedCat("")}
+                disabled={!tokenReady}
+                className={`cursor-pointer px-2 py-1 text-lg font-bold rounded-lg border transition-all
+                  ${selectedCat === ""
+                    ? "bg-gray-700 text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-500 border-white"}`}
               >
-                {labels[k]}
+                전체
               </button>
-            )
-          })}
-        </div>
-        <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 -mt-2 mb-4 flex items-center justify-end gap-5">
-          <div className="relative">
-            <select
-              id="sort"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value as SortOrder)}
-              disabled={!tokenReady}
-              aria-label="정렬"
-              className={`
-                peer
-                w-fit
-                appearance-none
-                bg-white/95 backdrop-blur
-                text-gray-800
-                rounded-xl
-                border border-gray-300
-                shadow-sm
-                px-4 pr-10 py-2 
-                outline-none
-                transition-all duration-200
-                disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed
-              `}
-            >
-              <option value="latest">최신글</option>
-              <option value="oldest">오래된글</option>
-            </select>
-            <span
-              className="
-                pointer-events-none
-                material-symbols-outlined
-                absolute right-3 top-1/2 -translate-y-1/2
-                text-gray-500 transition-colors
-              "
-            >
-              expand_more
-            </span>
-          </div>
+              {catLoading && (
+                <div className="text-sm opacity-80">카테고리 불러오는 중…</div>
+              )}
+              {catError && (
+                <div className="text-lg text-red-300 flex items-center">로그인 후 이용해주세요.</div>
+              )}
+              {!catLoading && !catError && keys.map((k) => {
+                const isActive = selectedCat === k;
+                return (
+                  <button
+                    key={k}
+                    onClick={() => setSelectedCat(k)}
+                    className={`cursor-pointer px-2 py-1 text-lg font-bold hover:bg-gray-500 rounded-lg border border-white text-gray-700
+                    ${isActive ? "bg-gray-700 text-white" : "bg-white text-gray-700 hover:bg-gray-500 border-white" } `}
+                  >
+                    {labels[k]}
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+        {tokenReady && (
+          <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 -mt-2 mb-4 flex items-center justify-end gap-5">
+            <div className="relative">
+              <select
+                id="sort"
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+                aria-label="정렬"
+                className="peer w-fit appearance-none bg-white/95 backdrop-blur text-gray-800 rounded-xl border border-gray-300 shadow-sm px-4 pr-10 py-2 outline-none"
+              >
+                <option value="latest">최신글</option>
+                <option value="oldest">오래된글</option>
+              </select>
+              <span className="pointer-events-none material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-gray-500">
+                expand_more
+              </span>
+            </div>
 
-          {tokenReady ? (
             <Link
               href="/post"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-800 border border-gray-300 hover:bg-gray-200 font-bold cursor-pointer"
@@ -239,87 +245,82 @@ export default function Home() {
               글쓰기
               <span className="material-symbols-outlined text-base">edit</span>
             </Link>
-          ) : (
-            <button
-              disabled
-              title="로그인 후 이용해주세요"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white text-gray-400 border border-gray-300 opacity-60 cursor-not-allowed"
-            >
-              <span className="material-symbols-outlined text-base">edit</span>
-              글쓰기
-            </button>
-          )}
-        </div>
-        <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto px-3 sm:px-4">
-          {(visible || []).map((post: Post) => (
-            <Link key={post.id} href={`/boards/${post.id}`}>
-              <div
-                className="relative w-full min-w-0
-              bg-gray-200 rounded-xl shadow-sm
-                cursor-pointer hover:bg-gray-400
-                flex items-stretch
-                h-[100px] sm:h-[120px] overflow-hidden
-                group"
-              >
-                <div className="flex-1 min-w-0 px-4 py-3 flex flex-col justify-center">
-                  <div className="font-semibold text-black text-base sm:text-xl truncate">{post.title}</div>
-                  <div className="text-gray-600 mt-1 sm:mt-2 text-xs sm:text-base truncate">{new Date(post.createdAt).toLocaleDateString("ko-KR", {
-                    year: "numeric",
-                    month: "2-digit",
-                    day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: false,
-                  })}
+          </div>
+        )}
+        {tokenReady && (
+          <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto px-3 sm:px-4">
+            {(visible || []).map((post: Post) => (
+              <Link key={post.id} href={`/boards/${post.id}`}>
+                <div
+                  className="relative w-full min-w-0
+                bg-gray-200 rounded-xl shadow-sm
+                  cursor-pointer hover:bg-gray-400
+                  flex items-stretch
+                  h-[100px] sm:h-[120px] overflow-hidden
+                  group"
+                >
+                  <div className="flex-1 min-w-0 px-4 py-3 flex flex-col justify-center">
+                    <div className="font-semibold text-black text-base sm:text-xl truncate">{post.title}</div>
+                    <div className="text-gray-600 mt-1 sm:mt-2 text-xs sm:text-base truncate">{new Date(post.createdAt).toLocaleDateString("ko-KR", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })}
+                    </div>
+                  </div>
+                  <div
+                    className="flex items-center justify-center 
+                    font-bold text-sm sm:text-lg md:text-xl 
+                    text-black w-16 sm:w-20 md:w-24 lg:w-28 
+                    h-full px-2 flex-shrink-0 transition
+                    group-hover:brightness-90 
+                    rounded-none rounded-r-xl"
+                    style={{...badgeStyle(post.category),
+                      borderTopLeftRadius: 0,
+                      borderBottomLeftRadius: 0,
+                      borderTopRightRadius: '0.75rem',
+                      borderBottomRightRadius: '0.75rem',
+                    }}
+                  >
+                    <span className="whitespace-nowrap">
+                      {labels[post.category] ?? post.category}
+                    </span>
                   </div>
                 </div>
-                <div
-                  className="flex items-center justify-center 
-                  font-bold text-sm sm:text-lg md:text-xl 
-                  text-black w-16 sm:w-20 md:w-24 lg:w-28 
-                  h-full px-2 flex-shrink-0 transition
-                  group-hover:brightness-90 
-                  rounded-none rounded-r-xl"
-                  style={{...badgeStyle(post.category),
-                    borderTopLeftRadius: 0,
-                    borderBottomLeftRadius: 0,
-                    borderTopRightRadius: '0.75rem',
-                    borderBottomRightRadius: '0.75rem',
-                  }}
+              </Link>
+            ))}
+          </div>
+        )}
+        {tokenReady && (
+          <div className="flex gap-2 mt-6 mb-10">
+            <button onClick={()=>goToPage(page-1)} disabled={page===0} aria-disabled={page === 0} tabIndex={page === 0 ? -1 : 0} 
+            type="button"
+            className="px-3 py-1 rounded bg-white text-gray-700 cursor-pointer
+              focus:outline-none active:translate-y-0">&lt;</button>
+            {Array.from({ length: totalPages }).map((_, idx) => {
+              const isCurrent = page === idx;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => goToPage(idx)}
+                  aria-current={isCurrent ? "page" : undefined}
+                  className={`px-3 py-1 rounded cursor-pointer focus:outline-none active:translate-y-0
+                    ${isCurrent ? "bg-gray-300 text-black" : "bg-white text-gray-700 hover:bg-gray-200"}`}
                 >
-                  <span className="whitespace-nowrap">
-                    {labels[post.category] ?? post.category}
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-        <div className="flex gap-2 mt-6 mb-10">
-          <button onClick={()=>goToPage(page-1)} disabled={page===0} aria-disabled={page === 0} tabIndex={page === 0 ? -1 : 0} 
-          type="button"
-          className="px-3 py-1 rounded bg-white text-gray-700 cursor-pointer
-            focus:outline-none active:translate-y-0">&lt;</button>
-          {Array.from({ length: totalPages }).map((_, idx) => {
-            const isCurrent = page === idx;
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => goToPage(idx)}
-                aria-current={isCurrent ? "page" : undefined}
-                className={`px-3 py-1 rounded cursor-pointer focus:outline-none active:translate-y-0
-                  ${isCurrent ? "bg-gray-300 text-black" : "bg-white text-gray-700 hover:bg-gray-200"}`}
-              >
-                {idx + 1}
-              </button>
-            );
-          })}
-          <button onClick={()=>goToPage(page+1)} disabled={page===totalPages-1} aria-disabled={page === totalPages -1} tabIndex={page === totalPages -1 ? -1 : 0} 
-          type="button"
-          className="px-3 py-1 rounded bg-white text-gray-700 cursor-pointer
-            focus:outline-none active:translate-y-0">&gt;</button>
-        </div>  
+                  {idx + 1}
+                </button>
+              );
+            })}
+            <button onClick={()=>goToPage(page+1)} disabled={page===totalPages-1} aria-disabled={page === totalPages -1} tabIndex={page === totalPages -1 ? -1 : 0} 
+            type="button"
+            className="px-3 py-1 rounded bg-white text-gray-700 cursor-pointer
+              focus:outline-none active:translate-y-0">&gt;</button>
+          </div>  
+        )}
         {isResponsive && (
           <div className="fixed right-4 bottom-4 z-50 group">
             <img

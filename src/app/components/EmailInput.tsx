@@ -3,6 +3,8 @@ import useIsMobile from "../hooks/useIsMobile";
 
 interface EmailInputBoxProps {
   label?: string;
+  id?: string;
+  name?: string;
   local: string;
   setLocal: (val: string) => void;
   domain: string;
@@ -29,6 +31,8 @@ interface EmailInputBoxProps {
 
 const EmailInputBox: React.FC<EmailInputBoxProps> = ({
   label,
+  id,
+  name,
   local,
   setLocal,
   domain,
@@ -79,6 +83,8 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
     {label && <label className="block text-lg font-bold text-black mb-2">{label}</label>}
     <div className={`flex ${isMobile ? "flex-col gap-2 items-center justify-center" : "flex-row gap-2 items-center justify-center"} w-full`}>
       <input
+        id={id}
+        name={name}
         type="text"
         value={local}
         onChange={handleLocalChange}
@@ -94,6 +100,8 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
         {isCustomDomain ? (
           <div className="relative flex items-center w-full">
             <input
+              id={id}
+              name={name}
               ref={customRef}
               type="text"
               value={customDomain}

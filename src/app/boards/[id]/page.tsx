@@ -7,28 +7,13 @@ import Sidebar from '../../components/Sidebar';
 import decodeJWT from '../../utils/decodeJWT';
 import useIsMobile from '../../hooks/useIsMobile';
 import { useToast } from '@/app/components/Toast';
-
-const CATEGORY_LABEL = {
-  NOTICE: '공지',
-  FREE: '자유',
-  QNA: 'Q&A',
-  ETC: '기타',
-} as const;
-
-const CATEGORY_COLOR = {
-  NOTICE: 'bg-[#ead0d1]',
-  FREE: 'bg-[#d5ebd6]',
-  QNA: 'bg-[#f8f5c6]',
-  ETC: 'bg-[#e3f6f4]',
-} as const;
-
-type CategoryKey = keyof typeof CATEGORY_LABEL;
+import useCategories from '@/app/hooks/useCategories';
 
 interface BoardDetail {
   id: number;
   title: string;
   content: string;
-  boardCategory: CategoryKey;
+  boardCategory: string;
   imageUrl?: string | null;
   createdAt: string;
 }
@@ -49,6 +34,7 @@ export default function BoardDetailPage() {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { showToast } = useToast();
+  const { labels, badgeStyle, loading: catLoading, error: catError } = useCategories();
 
   const isResponsive = isSm;
 
@@ -73,7 +59,6 @@ export default function BoardDetailPage() {
         const res = await instance.get(`/boards/${params.id}`);
         setDetail(res.data as BoardDetail);
       } catch (e) {
-        console.error(e);
         setErrorMsg('게시글을 불러오지 못했습니다.');
       } finally {
         setLoading(false);
@@ -167,9 +152,10 @@ export default function BoardDetailPage() {
             <article className="w-full bg-white text-gray-900 rounded-2xl p-6 shadow-lg">
               <div className="flex items-center gap-3 mb-3">
                 <span
-                  className={`px-3 py-1 rounded-lg text-sm font-semibold ${CATEGORY_COLOR[detail.boardCategory]}`}
+                  className='px-3 py-1 rounded-lg text-sm font-semibold'
+                  style={badgeStyle(detail.boardCategory)}
                 >
-                  {CATEGORY_LABEL[detail.boardCategory]}
+                  {labels[detail.boardCategory] ?? detail.boardCategory}
                 </span>
                 <span className="text-sm text-gray-500">{formattedDate}</span>
               </div>
@@ -192,6 +178,9 @@ export default function BoardDetailPage() {
             </article>
           )}
         </div>
+        {catLoading && <div className="mt-4 text-sm opacity-80">카테고리 불러오는 중…</div>}
+        {catError && <div className="mt-4 text-sm text-red-300">카테고리 로딩 실패</div>}
+
         {confirmOpen && (
           <div
             className="fixed inset-0 z-[9998] bg-black/40 flex items-center justify-center"

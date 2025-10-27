@@ -1,7 +1,7 @@
 'use client';
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EmailInputBox from "../components/EmailInput";
 import CommonInputBox from "../components/CommonInputBox";
 import useIsMobile from "../hooks/useIsMobile";
@@ -30,26 +30,32 @@ export default function Signup() {
   const [signupMessage, setSignupMessage] = useState("");
   const [isCustomDomain, setIsCustomDomain] = useState(false);
   const [customDomain, setCustomDomain] = useState("");
+  const canPressConfirmPw = password.length > 0 && confirmPw.length > 0;
   const { showToast } = useToast();
   const router = useRouter();
   
-  
-  
-
-  const emailRegex = /^[a-zA-Z0-9]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[A-Za-z](?!.*\.\.)[A-Za-z0-9._-]{0,63}$/;
   const domains = ['gmail.com', 'naver.com', 'hanmail.com', 'kakao.com', 'bigs.or.kr', '직접입력'];
 
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!%*#?&])[A-Za-z\d!%*#?&]{8,}$/;
 
-  interface ErrorResponse {
-    message: string;
-  }
+  useEffect(() => {
+    setIsEmailVerified(false);
+    setEmailError(null);
+  }, [local, domain, customDomain, isCustomDomain]);
+
+  useEffect(() => {
+    setIsPasswordConfirmed(false);
+    setConfirmError("");
+    setConfirmTouched(false);
+  }, [password, confirmPw]);
 
   const handleDropdownToggle = () => setDropdownOpen(prev => !prev);
   const handleDomainSelect = (selectedDomain: string) => {
     setDomain(selectedDomain);
     setDropdownOpen(false);
     setEmailError(null);
+    setIsEmailVerified(false);
 
     if(selectedDomain === '직접입력') {
       setIsCustomDomain(true);
@@ -63,6 +69,7 @@ export default function Signup() {
   const handleLocalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocal(e.target.value);
     setEmailError(null);
+    setIsEmailVerified(false);
   };
 
   const handleButtonClick = async () => {
@@ -82,12 +89,19 @@ export default function Signup() {
     setPassword(pw);
     if(!passwordRegex.test(pw)) {
       setPwError("비밀번호는 8자 이상, 영문자/숫자/특수문자 각 1개 이상 포함해야 합니다.")
-    } else setPwError("");
+    } else {
+      setPwError("");
+    }
+    setIsPasswordConfirmed(false);
+    setConfirmError("");
+    setConfirmTouched(false);
   };
 
   const handleConfirmChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   setConfirmPw(e.target.value);
   setConfirmTouched(false);
+  setIsPasswordConfirmed(false);
+  setConfirmError("");
 };
 
   const handleConfirmButton = () => {
@@ -105,7 +119,8 @@ export default function Signup() {
     isEmailVerified &&
     isPasswordConfirmed &&
     name.trim() !== "" &&
-    passwordRegex.test(password);
+    passwordRegex.test(password) &&
+    isPasswordConfirmed;
 
   const handleSignup = async () => {
     const effectiveDomain = isCustomDomain ? customDomain : domain;
@@ -226,7 +241,11 @@ export default function Signup() {
                 <button
                   type="button"
                   onClick={handleConfirmButton}
-                  className="min-w-[72px] h-[48px] px-4 py-0 rounded-lg bg-blue-500 text-white hover:bg-blue-600 flex items-center justify-center cursor-pointer"
+                  disabled={!canPressConfirmPw}
+                  className={`min-w-[72px] h-[48px] px-4 py-0 rounded-lg font-semibold flex items-center justify-center transition
+                  ${canPressConfirmPw
+                    ? 'bg-blue-500 text-white hover:bg-blue-600 cursor-pointer'
+                    : 'bg-white text-gray-500'}`}
                 >
                 확인
                 </button>
@@ -242,7 +261,8 @@ export default function Signup() {
           <div className="flex flex-row justify-between mt-10 gap-20 w-full">
             <button
             type="button"
-            className={`flex items-center justify-center w-full rounded-lg px-2 py-2 text-black font-bold text-lg ${isSignupEnabled ? 'bg-green-300 border-2 border-green-500 cursor-pointer' : 'bg-gray-300 cursor-not-allowed border-2 border-gray-500'}`}
+            className={`flex items-center justify-center w-full rounded-lg px-2 py-2 text-black font-bold text-lg
+              ${isSignupEnabled ? 'bg-green-300 border-2 border-green-500 cursor-pointer' : 'bg-gray-300 cursor-not-allowed border-2 border-gray-500'}`}
             onClick={handleSignup}
             disabled={!isSignupEnabled}
             >

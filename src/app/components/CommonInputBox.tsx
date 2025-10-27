@@ -4,6 +4,8 @@ interface InputBoxProps {
   containerClassName?: string;
   inputClassName?: string;
   label?: string;
+  id?: string;
+  name?: string;
   type?: string;
   value: string;
   placeholder?: string;
@@ -21,6 +23,8 @@ export default function CommonInputBox({
   containerClassName = "",
   inputClassName = "",
   label,
+  id,
+  name,
   type = "text",
   value,
   placeholder,
@@ -40,6 +44,8 @@ export default function CommonInputBox({
       {label && <label className="font-semibold text-lg text-black">{label}</label>}
       <div className="relative w-full">
         <input
+        id={id}
+        name={name}
           type={type}
           value={value}
           placeholder={placeholder}
