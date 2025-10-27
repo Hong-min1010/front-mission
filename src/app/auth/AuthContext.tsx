@@ -25,9 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [refreshRetry, setRefreshRetry] = useState(0);
   const router = useRouter();
   const [isAuthModalOpen, setAuthModalOpen] = useState(false);
-  const openAuthModal = useCallback(() => setAuthModalOpen(true), []);
-  const closeAuthModal = useCallback(() => setAuthModalOpen(false), []);
-    const pathname = usePathname();
+  const pathname = usePathname();
   const forceAuthModal = pathname === '/' && !tokenReady;
   const isModalOpen = forceAuthModal || isAuthModalOpen;
 
@@ -136,8 +134,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     tokenStore.clear();
     setUser(null);
     setTokenReady(false);
+    const CLEAR_KEYS = [
+    'lastCat',
+    'lastSort',
+    'comingBackExpect',
+    'catIntent',
+  ];
+  try {
+    CLEAR_KEYS.forEach(k => sessionStorage.removeItem(k));
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith('lastPage:')) {
+        sessionStorage.removeItem(key);
+        i--;
+      }
+    }
+  } catch {}
     router.replace('/');
-    openAuthModal();
+    setAuthModalOpen(true);
   };
 
   const ctxValue = useMemo(
@@ -151,8 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         {children}
         <LoginModal
           isOpen={isModalOpen}
-          onClose={() => { if (!forceAuthModal) closeAuthModal(); }}
-          onLoginSuccess={() => { closeAuthModal(); }}
+          onClose={() => { console.log(forceAuthModal);
+          if (tokenReady || forceAuthModal) setAuthModalOpen(false); }}
           onGoSignup={() => {
             setAuthModalOpen(false);
             router.push('/signup');

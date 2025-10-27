@@ -57,7 +57,9 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess,
     if(!emailRegex.test(email)) {
       setEmailError("올바른 이메일 형식으로 입력해주세요.")
       return;
-    }
+    } else {
+      setEmailError("")
+    };
 
     try {
       const res = await instance.post('/auth/signin', {
@@ -72,18 +74,21 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess,
       showToast({ type: 'success', message: '로그인 성공 !' });
       onClose();
     } catch(e) {
-      if (e instanceof AxiosError)
+      
       showToast({ type: 'fail', message: '로그인 실패 ! 아이디와 비밀번호를 확인해주세요.'})
       return;
+    }
+  }
+
+  const enterLogin = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if(e.key === 'Enter') {
+      handleLogin();
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="relative bg-white rounded-xl shadow-lg w-full max-w-md mx-4 p-6">
-        <span className="material-symbols-outlined absolute top-3 right-3 text-xl 
-        text-black hover:text-orange-600 transition cursor-pointer"
-        onClick={onClose}>close</span>
         <div className={`font-sans items-center justify-items-center flex flex-col  `}>
           <main className="flex flex-col row-start-2 items-center justify-items-center w-full">
             <div className="flex items-center justify-center font-bold text-2xl mb-5 text-black">
