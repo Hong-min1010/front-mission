@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EmailInputBox from "./EmailInput";
 import CommonInputBox from "./CommonInputBox";
 import instance from "../axiosInstance";
@@ -30,6 +30,20 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess,
   const [rememberLogin, setRememberLogin] = useState(false);
   const { showToast } = useToast();
 
+  useEffect(() => {
+    if (!isOpen) return;
+    setLocal("");
+    setDomain("선택");
+    setDropdownOpen(false);
+    setIsCustomDomain(false);
+    setCustomDomain("");
+    setEmailError(null);
+    setPwError("");
+    setPassword("");
+    setTouched(false);
+    setRememberLogin(false);
+  }, [isOpen]);
+
   if(!isOpen) return null;
   
   const emailRegex = /^[a-zA-Z0-9]+@[^\s@]+\.[^\s@]+$/;
@@ -49,6 +63,8 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess,
     const pw = e.target.value;
     setPassword(pw);
   };
+
+  
 
   const handleLogin = async () => {
     const effectiveDomain = isCustomDomain ? customDomain : domain;
@@ -74,17 +90,11 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess,
       showToast({ type: 'success', message: '로그인 성공 !' });
       onClose();
     } catch(e) {
-      
       showToast({ type: 'fail', message: '로그인 실패 ! 아이디와 비밀번호를 확인해주세요.'})
       return;
     }
   }
-
-  const enterLogin = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if(e.key === 'Enter') {
-      handleLogin();
-    }
-  }
+  
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
