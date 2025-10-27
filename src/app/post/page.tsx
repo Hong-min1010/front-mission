@@ -142,7 +142,7 @@ export default function Write() {
         </div>
         <section className="w-full max-w-5xl">
           <div className="flex items-baseline gap-2">
-            <h2 className="text-xl sm:text-2xl font-bold">카테고리</h2>
+            <h2 className="text-xl sm:text-2xl font-semibold">카테고리</h2>
             <span className="text-red-400 font-bold">(필수)</span>
           </div>
           <div className="mt-3 flex flex-wrap gap-2 sm:gap-3">
@@ -167,8 +167,8 @@ export default function Write() {
         </section>
         <section className="w-full max-w-5xl mt-8">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-xl sm:text-2xl font-bold">첨부파일 등록</h2>
-            <span className="text-red-400 font-bold">(선택)</span>
+            <h2 className="text-xl sm:text-2xl font-semibold">첨부파일 등록</h2>
+            <span className="text-red-400 font-semibold">(선택)</span>
             <button
               onClick={handlePickFile}
               className="ml-auto bg-white text-black rounded-lg px-4 sm:px-5 py-2 sm:py-2.5 text-base font-bold hover:bg-gray-200 cursor-pointer"
@@ -203,7 +203,7 @@ export default function Write() {
         </section>
         {/* Title */}
         <section className="w-full max-w-5xl mt-8">
-          <label htmlFor="postTitle" className="block mb-2 text-base sm:text-lg font-semibold">
+          <label htmlFor="postTitle" className="block mb-2 text-xl sm:text-2xl font-semibold">
             제목
           </label>
           <CommonInputBox
@@ -217,7 +217,7 @@ export default function Write() {
           />
         </section>
         <section className="w-full max-w-5xl mt-6">
-          <label htmlFor="postContent" className="block mb-2 text-base sm:text-lg font-semibold">
+          <label htmlFor="postContent" className="block mb-2 text-xl sm:text-2xl font-semibold">
             내용
           </label>
           <textarea

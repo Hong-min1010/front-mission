@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import SearchBar from "./components/SearchBar";
 import useIsMobile from "./hooks/useIsMobile";
 import instance from "./axiosInstance";

@@ -1,10 +1,12 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode, useRef } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useRef, useCallback, useMemo } from "react";
 import decodeJWT from "@/app/utils/decodeJWT";
 import instance from "../axiosInstance";
 import { tokenStore } from "../utils/tokenStore";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import LoginModal from "../components/LoginModal";
+import { ToastProvider } from "../components/Toast";
 
 type User = { email?: string; name?: string } | null;
 
@@ -22,6 +24,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tokenReady, setTokenReady] = useState(false);
   const [refreshRetry, setRefreshRetry] = useState(0);
   const router = useRouter();
+  const [isAuthModalOpen, setAuthModalOpen] = useState(false);
+  const openAuthModal = useCallback(() => setAuthModalOpen(true), []);
+  const closeAuthModal = useCallback(() => setAuthModalOpen(false), []);
+    const pathname = usePathname();
+  const forceAuthModal = pathname === '/' && !tokenReady;
+  const isModalOpen = forceAuthModal || isAuthModalOpen;
 
 
   const refreshTimer = useRef<number | null>(null);
@@ -54,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     if (!rt) {
     console.warn('[Auth] refreshNow: refresh token missing, skip logout.');
-    return; // ❗️바로 logout() 하지 말고 무시
+    return;
     }
     try {
       const res = await instance.post<{ accessToken: string; refreshToken?: string }>(
@@ -123,11 +131,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setTokenReady(false);
     router.replace('/');
+    openAuthModal();
   };
 
+  const ctxValue = useMemo(
+    () => ({ user, tokenReady, login, logout }),
+    [user, tokenReady]
+  );
+
   return (
-    <AuthContext.Provider value={{ user, tokenReady, login, logout }}>
-      {children}
+    <AuthContext.Provider value={ctxValue}>
+      <ToastProvider>
+        {children}
+        <LoginModal
+          isOpen={isAuthModalOpen}
+          onClose={() => { if (!forceAuthModal) closeAuthModal(); }}
+          onLoginSuccess={() => { closeAuthModal(); }}
+        />
+      </ToastProvider>
     </AuthContext.Provider>
   );
 }

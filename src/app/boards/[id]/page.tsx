@@ -73,6 +73,7 @@ export default function BoardDetailPage() {
   const handleConfirmDelete = async () => {
     setDeleting(true);
     try {
+      const res = await instance.delete(`/boards/${params.id}`);
       showToast({ type: 'success', message: '게시글이 삭제되었습니다.' });
       setConfirmOpen(false);
       router.replace('/');
