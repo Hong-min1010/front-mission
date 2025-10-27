@@ -38,7 +38,7 @@ export default function Signup() {
   const emailRegex  = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
   const domains = ['gmail.com', 'naver.com', 'hanmail.com', 'kakao.com', 'bigs.or.kr', '직접입력'];
 
-  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!%*#?&])[A-Za-z\d!%*#?&]{8,}$/;
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[^\w\s])(?!.*\s).{8,}$/;
 
   useEffect(() => {
     setIsEmailVerified(false);

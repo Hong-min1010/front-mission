@@ -31,6 +31,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const forceAuthModal = pathname === '/' && !tokenReady;
   const isModalOpen = forceAuthModal || isAuthModalOpen;
 
+  useEffect(() => {
+    if (pathname !== '/') {
+      setAuthModalOpen(false);
+    }
+  }, [pathname]);
+
 
   const refreshTimer = useRef<number | null>(null);
   const clearTimer = () => {
@@ -144,9 +150,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       <ToastProvider>
         {children}
         <LoginModal
-          isOpen={isAuthModalOpen}
+          isOpen={isModalOpen}
           onClose={() => { if (!forceAuthModal) closeAuthModal(); }}
           onLoginSuccess={() => { closeAuthModal(); }}
+          onGoSignup={() => {
+            setAuthModalOpen(false);
+            router.push('/signup');
+          }}
         />
       </ToastProvider>
     </AuthContext.Provider>

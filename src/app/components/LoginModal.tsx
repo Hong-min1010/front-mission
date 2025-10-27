@@ -13,9 +13,10 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess?: () => void;
+  onGoSignup?: () => void;
 }
 
-const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess}) => {
+const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess, onGoSignup}) => {
   const { login } = useAuth();
   const [local, setLocal] = useState("");
   const [domain, setDomain] = useState("선택");

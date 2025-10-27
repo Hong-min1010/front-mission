@@ -143,19 +143,22 @@ const handleSubmit = async () => {
 };
 
   return (
-    <div className="flex flex-row h-screen bg-gray-700 text-white">
+    <div className="flex min-h-dvh items-stretch bg-gray-700 text-white">
       {!isResponsive && (
-        <Sidebar
-          user={safeUser}
-          search={''}
-          setSearch={() => {}}
-          touched={false}
-          setTouched={() => {}}
-          showSearch={false}
-        />
+        <aside className='w-[280px] lg:w-[320px] flex-shrink-0
+          sticky top-0 h-dvh border-r border-gray-600'>
+            <Sidebar
+              user={safeUser}
+              search={''}
+              setSearch={() => {}}
+              touched={false}
+              setTouched={() => {}}
+              showSearch={false}
+            />
+        </aside>
       )}
 
-      <main className="flex flex-col flex-1 min-h-0 relative p-5 items-center">
+      <main className="flex flex-col flex-1 min-w-0 min-h-0 overflow-y-auto relative p-5 items-center">
         <div className="w-full max-w-5xl flex flex-col gap-5">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-extrabold">게시글 수정</h1>
@@ -238,7 +241,7 @@ const handleSubmit = async () => {
                     <img
                       src={previewUrl || detail.imageUrl || ''}
                       alt="미리보기"
-                      className="w-full h-auto max-h-[50vh] object-contain rounded-lg bg-white mt-2"
+                      className="w-full h-auto max-h-[40vh] object-contain rounded-lg bg-white mt-2"
                     />
                     {removeExistingImage && (
                       <p className='text-sm text-red-300 mt-2'>게시글 저장 시 기존 이미지가 삭제됩니다.</p>

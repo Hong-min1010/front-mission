@@ -29,12 +29,20 @@ export default function Home() {
   const [allPosts, setAllPosts] = useState<Post[]>([]);
   const { user, tokenReady } = useAuth();
   const [sortOrder, setSortOrder] = useState<SortOrder>('latest');
+  const PAGE_KEY = 'lastPage';
+  const CAT_KEY  = 'lastCat';
+  const SORT_KEY = 'lastSort';
+  const COMING_BACK = 'comingBackExpect';
+  const CAT_INTENT  = 'catIntent';
+
+  const pageKeyFor = (cat: string, sort: SortOrder) =>
+    `${PAGE_KEY}:${cat || 'ALL'}:${sort}`;
 
   const safeUser = user ?? { name: "", email: "" };
 
   const isResponsive = isSm;
-  const skipCatInit = useRef(true);
-  const skipSortInit = useRef(true);
+
+  const hasRestoredRef = useRef(false);
 
   useEffect(() => {
     if(!tokenReady) {
@@ -49,7 +57,6 @@ export default function Home() {
   useEffect(() => {
     if (!tokenReady) {
       setAllPosts([]);
-      setSelectedCat('');
       return;
     };
     
@@ -93,20 +100,27 @@ export default function Home() {
   }, [tokenReady]);
 
   useEffect(() => {
-    if (skipCatInit.current) {
-      skipCatInit.current = false;
-      return;
+    const savedCat  = sessionStorage.getItem(CAT_KEY);
+    const savedSort = sessionStorage.getItem(SORT_KEY);
+    if (savedCat) setSelectedCat(savedCat);
+    if (savedSort === 'latest' || savedSort === 'oldest') {
+      setSortOrder(savedSort as SortOrder);
     }
-    setPage(0);
+  }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem(CAT_KEY, selectedCat);
   }, [selectedCat]);
 
   useEffect(() => {
-    if (skipSortInit.current) {
-      skipSortInit.current = false;
-      return;
-    }
-    setPage(0);
+    if (!hasRestoredRef.current) return;
+    sessionStorage.setItem(pageKeyFor(selectedCat, sortOrder), String(page));
+  }, [page, selectedCat, sortOrder]);
+
+  useEffect(() => {
+    sessionStorage.setItem(SORT_KEY, sortOrder);
   }, [sortOrder]);
+
 
   const PAGE_SIZE = 10;
   const term = search.trim().toLowerCase();
@@ -128,25 +142,31 @@ export default function Home() {
   const visible = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   useEffect(() => {
-    const saved = sessionStorage.getItem('lastPage');
-    if (saved) setPage(Number(saved));
-  }, []);
+    const intent = sessionStorage.getItem(CAT_INTENT);
+    const comingBack = sessionStorage.getItem(COMING_BACK) === '1';
 
-  useEffect(() => {
-    const saved = sessionStorage.getItem('lastPage');
-    if (!saved) return;
+    const listReady = allPosts.length > 0;
 
-    const savedPage = Number(saved);
-    const maxPage = Math.max(0, Math.ceil(sorted.length / PAGE_SIZE) - 1);
-    const target = Math.min(savedPage, maxPage);
+    if(!listReady) {
+      return;
+    }
 
-    setPage(prev => (prev === target ? prev : target));
-
-  }, [sorted.length]);
+    if (intent === 'user' && !comingBack) {
+      setPage(0);
+      hasRestoredRef.current = true;
+    } else {
+      const saved = sessionStorage.getItem(pageKeyFor(selectedCat, sortOrder));
+      const maxPage = Math.max(0, Math.ceil(sorted.length / PAGE_SIZE) - 1);
+      const target = Math.min(saved ? Number(saved) : 0, maxPage);
+      setPage(target);
+      hasRestoredRef.current = true;
+    }
+    sessionStorage.removeItem(CAT_INTENT);
+    sessionStorage.removeItem(COMING_BACK);
+  }, [selectedCat, sortOrder, allPosts, search, PAGE_SIZE]);
 
   const goToPage = (pageNum: number) => {
     if (pageNum >= 0 && pageNum < totalPages) setPage(pageNum);
-    sessionStorage.setItem('lastPage', String(pageNum));
   };
 
   return (
@@ -189,7 +209,10 @@ export default function Home() {
           <>
             <div className="flex flex-row w-full justify-end gap-3 max-w-6xl mx-auto my-6">
               <button
-                onClick={() => setSelectedCat("")}
+                onClick={() => {
+                  sessionStorage.setItem(CAT_INTENT, 'user');
+                  setSelectedCat("");
+                }}
                 disabled={!tokenReady}
                 className={`cursor-pointer px-2 py-1 text-lg font-bold rounded-lg border transition-all
                   ${selectedCat === ""
@@ -209,7 +232,10 @@ export default function Home() {
                 return (
                   <button
                     key={k}
-                    onClick={() => setSelectedCat(k)}
+                    onClick={() => {
+                      sessionStorage.setItem(CAT_INTENT, 'user');
+                      setSelectedCat(k);
+                    }}
                     className={`cursor-pointer px-2 py-1 text-lg font-bold hover:bg-gray-500 rounded-lg border border-white text-gray-700
                     ${isActive ? "bg-gray-700 text-white" : "bg-white text-gray-700 hover:bg-gray-500 border-white" } `}
                   >
@@ -250,7 +276,16 @@ export default function Home() {
         {tokenReady && (
           <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto px-3 sm:px-4">
             {(visible || []).map((post: Post) => (
-              <Link key={post.id} href={`/boards/${post.id}`}>
+              <Link
+                key={post.id}
+                href={`/boards/${post.id}`}
+                onClick={() => {
+                  sessionStorage.setItem(CAT_KEY, selectedCat);
+                  sessionStorage.setItem(SORT_KEY, sortOrder);
+                  sessionStorage.setItem(pageKeyFor(selectedCat, sortOrder), String(page));
+                  sessionStorage.setItem(COMING_BACK, '1');
+                }}
+              >
                 <div
                   className="relative w-full min-w-0
                 bg-gray-200 rounded-xl shadow-sm
