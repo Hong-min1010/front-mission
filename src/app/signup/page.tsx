@@ -34,7 +34,8 @@ export default function Signup() {
   const { showToast } = useToast();
   const router = useRouter();
   
-  const emailRegex = /^[A-Za-z](?!.*\.\.)[A-Za-z0-9._-]{0,63}$/;
+  const localRegex = /^[A-Za-z](?!.*\.\.)(?!.*\.$)[A-Za-z0-9._%+-]{0,63}$/;
+  const emailRegex  = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
   const domains = ['gmail.com', 'naver.com', 'hanmail.com', 'kakao.com', 'bigs.or.kr', '직접입력'];
 
   const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!%*#?&])[A-Za-z\d!%*#?&]{8,}$/;
@@ -73,15 +74,22 @@ export default function Signup() {
   };
 
   const handleButtonClick = async () => {
-    const email = `${local}@${isCustomDomain ? customDomain : domain}`;
-    if (!emailRegex.test(email)) {
-      setEmailError("올바른 이메일 형식으로 입력해주세요.");
+    const lp = local.trim();
+    const dp = (isCustomDomain ? customDomain : domain).trim();
+
+    if (!localRegex.test(lp)) {
+      setEmailError("이메일 ID(@ 앞) 형식이 올바르지 않습니다.");
       setIsEmailVerified(false);
       return;
-    } else {
-      setEmailError("사용 가능한 이메일 형식입니다.")
-      setIsEmailVerified(true);
     }
+
+    if (!dp || dp === "선택") {
+      setEmailError("도메인을 선택하거나 입력해주세요.");
+      setIsEmailVerified(false);
+      return;
+    }
+    setEmailError("사용 가능한 이메일 ID입니다.");
+    setIsEmailVerified(true);
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,16 +131,20 @@ export default function Signup() {
     isPasswordConfirmed;
 
   const handleSignup = async () => {
-    const effectiveDomain = isCustomDomain ? customDomain : domain;
-    const email = `${local}@${effectiveDomain}`;
+    const lp = local.trim();
+    const dp = (isCustomDomain ? customDomain : domain).trim();
+    const email = `${lp}@${dp}`;
 
-    if(!emailRegex.test(email)) {
-      setEmailError("올바른 이메일 형식으로 입력해주세요.")
+    if (!localRegex.test(lp)) {
+      setEmailError("이메일 ID(@ 앞) 형식이 올바르지 않습니다.");
       return;
     }
-
-    if(isCustomDomain && !customDomain.trim()) {
-      setEmailError("도메인을 입력해주세요.")
+    if (!dp || dp === "선택") {
+      setEmailError("도메인을 선택하거나 입력해주세요.");
+      return;
+    }
+    if (!emailRegex.test(email)) {
+      setEmailError("올바른 전체 이메일 형식이 아닙니다.");
       return;
     }
 

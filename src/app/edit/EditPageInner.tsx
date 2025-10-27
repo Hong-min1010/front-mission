@@ -20,6 +20,13 @@ interface BoardDetail {
   createdAt: string;
 }
 
+type UpdatePayload = {
+  title: string;
+  content: string;
+  category: string;
+  removeImage?: boolean;
+}
+
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? 'https://front-mission.bigs.or.kr';
 
@@ -101,41 +108,42 @@ export default function EditPageInner() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleSubmit = async () => {
-    if (!boardId) return;
-    if (!title.trim() || !content.trim() || !category) {
-      showToast({ type: 'fail', message: '모든 필드를 입력해주세요.' });
-      return;
+const handleSubmit = async () => {
+  if (!boardId) return;
+  if (!title.trim() || !content.trim() || !category) {
+    showToast({ type: 'fail', message: '모든 필드를 입력해주세요.' });
+    return;
+  }
+
+  setSubmitting(true);
+  try {
+    const payload: UpdatePayload = {
+      title: title.trim(),
+      content: content.trim(),
+      category,
+      ...(removeExistingImage && !file ? { removeImage: true } : {}),
+    };
+
+    const form = new FormData();
+    form.append('request', new Blob([JSON.stringify(payload)], { type: 'application/json' }));
+
+    if (file) {
+      form.append('file', file);
     }
 
-    setSubmitting(true);
-    try {
-      const form = new FormData();
-      const requestPayload = {
-        title: title.trim(),
-        content: content.trim(),
-        category,
-      };
-      form.append(
-        'request',
-        new Blob([JSON.stringify(requestPayload)], { type: 'application/json' })
-      );
-      if (file) form.append('file', file);
+    await instance.patch(`/boards/${boardId}`, form);
+    showToast({ type: 'success', message: '게시글이 수정되었습니다.' });
 
-      await instance.patch(`/boards/${boardId}`, form, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      showToast({ type: 'success', message: '게시글이 수정되었습니다.' })
-      router.replace(`/boards/${boardId}`);
-    } catch (e) {
-      showToast({ type: 'fail', message: '게시글 수정에 실패했습니다.' })
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    router.replace(`/boards/${boardId}?t=${Date.now()}`);
+  } catch (e) {
+    showToast({ type: 'fail', message: '게시글 수정에 실패했습니다.' });
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
-    <div className="flex flex-row h-screen bg-gray-700 text-white overflow-hidden">
+    <div className="flex flex-row h-screen bg-gray-700 text-white">
       {!isResponsive && (
         <Sidebar
           user={safeUser}
@@ -147,7 +155,7 @@ export default function EditPageInner() {
         />
       )}
 
-      <main className="flex flex-col flex-1 min-h-0 overflow-y-auto relative p-5 items-center">
+      <main className="flex flex-col flex-1 min-h-0 relative p-5 items-center">
         <div className="w-full max-w-5xl flex flex-col gap-5">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-extrabold">게시글 수정</h1>
