@@ -32,14 +32,14 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess,
 
   useEffect(() => {
     if (!isOpen) return;
-    setLocal("");
-    setDomain("선택");
+    setLocal("developer");
+    setDomain("bigs.or.kr");
     setDropdownOpen(false);
     setIsCustomDomain(false);
     setCustomDomain("");
     setEmailError(null);
     setPwError("");
-    setPassword("");
+    setPassword("123qwe!@#");
     setTouched(false);
     setRememberLogin(false);
   }, [isOpen]);
@@ -68,7 +68,7 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess,
 
   const handleLogin = async () => {
     const effectiveDomain = isCustomDomain ? customDomain : domain;
-    const email = `${local}@${domain}`;
+    const email = `${local}@${effectiveDomain}`;
 
     if(!emailRegex.test(email)) {
       setEmailError("올바른 이메일 형식으로 입력해주세요.")
@@ -137,19 +137,20 @@ const LoginModal: React.FC<LoginModalProps> = ({isOpen, onClose, onLoginSuccess,
                   />
                   {pwError && <div className="text-red-500 text-sm mt-1">{pwError}</div>}
                 </div>
+                <span className="flex w-full justify-center text-sm text-red-400">편의를 위해 미리 로그인 정보를 입력해놓았습니다.</span>
                 <div className="flex items-center gap-2 mt-2">
-                <input
-                  type="checkbox"
-                  id="rememberMe"
-                  name="rememberMe"
-                  checked={rememberLogin}
-                  onChange={(e) => setRememberLogin(e.target.checked)}
-                  className="w-4 h-4 cursor-pointer"
-                />
-                <label htmlFor="rememberMe" className="text-sm text-gray-700">
-                  로그인 정보 저장
-                </label>
-              </div>
+                  <input
+                    type="checkbox"
+                    id="rememberMe"
+                    name="rememberMe"
+                    checked={rememberLogin}
+                    onChange={(e) => setRememberLogin(e.target.checked)}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                  <label htmlFor="rememberMe" className="text-sm text-gray-700">
+                    로그인 정보 저장
+                  </label>
+                </div>
               </div>
               <div className="flex gap-3 mt-10">
                 <Link href='/' className="w-full">

@@ -90,6 +90,9 @@ const EmailInputBox: React.FC<EmailInputBoxProps> = ({
         onChange={handleLocalChange}
         placeholder="이메일 입력"
         disabled={disabled}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && onButtonClick) onButtonClick();
+        }}
         className={`h-[48px] w-full px-4 border border-gray-700 rounded-lg text-base bg-white 
           placeholder:text-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-200 transition text-black
           ${msgType === "error" ? "border-red-500" : ""}`}

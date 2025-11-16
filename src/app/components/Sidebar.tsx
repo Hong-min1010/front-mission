@@ -5,8 +5,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import useCategories from "../hooks/useCategories";
 
+// 게시글 타입 지정
 type Post = { id: number; title: string; category: string; createdAt: string };
 
+// props의 Type 지정
 interface SidebarProps {
   user?: { name?: string; email?: string } | null;
   search?: string;
@@ -26,6 +28,8 @@ export default function Sidebar({
   showSearch = true,
   posts = [],
 }: SidebarProps) {
+  // 사용자 정보를 부모 컴포넌트인 Main에서 props로 전달 받음
+  // uesr 객체나 null이나 undefined라면 빈 객체 반환
   const { name = "", email = "" } = user ?? {};
   const [focused, setFocused] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
